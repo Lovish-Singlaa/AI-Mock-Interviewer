@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label';
 import axios from 'axios';
+import Link from 'next/link';
 import { Router } from 'next/router';
 import React, { useState } from 'react'
 import { toast } from 'sonner';
@@ -38,7 +39,9 @@ const Signup = () => {
             <Input type='text' onChange={(e) => setEmail(e.target.value)} value={email} placeholder='Enter your email' />
             <Label className='my-2'>Password</Label>
             <Input type='password' onChange={(e) => setPassword(e.target.value)} value={password} placeholder='Enter your password' />
-            <Button className='my-2 w-full' type='submit'>Signup</Button>
+            <Button className='my-2 w-full bg-blue-500 text-white p-2 rounded-md' type='submit'>Signup</Button>
+            <div className='text-sm'>Already a User? <Link href="/login"><span className='text-blue-400'>Login</span></Link></div>
+            
         </form>
     </div>
   )

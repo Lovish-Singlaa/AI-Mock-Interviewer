@@ -18,12 +18,12 @@ export default function HomePage() {
             >
               Features
             </Link>
-            <Link
+            {/* <Link
               href="#pricing"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Pricing
-            </Link>
+            </Link> */}
             <Link
               href="#testimonials"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -166,7 +166,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="pricing" className="py-20 bg-muted/50">
+        {/* <section id="pricing" className="py-20 bg-muted/50">
           <div className="container">
             <div className="mx-auto max-w-[58rem] text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Pricing</h2>
@@ -255,7 +255,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <section id="faq" className="py-20">
           <div className="container">

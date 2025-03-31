@@ -2,6 +2,7 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label';
 import axios from 'axios';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react'
 import { toast } from 'sonner';
@@ -19,7 +20,7 @@ const Login = () => {
           password
         })
         if(response.status==201){
-          toast.success(response.message);
+          toast.success("Login Successful!");
           router.push('/dashboard')
         }
       } catch (error) {
@@ -36,6 +37,7 @@ const Login = () => {
       <Label className='my-2'>Password</Label>
       <Input type='password' onChange={(e) => setPassword(e.target.value)} value={password} placeholder='Enter your password' />
       <button onClick={handleLogin} className='bg-blue-500 text-white p-2 rounded-md'>Login</button>
+      <div className='text-sm'>New User? <Link href="/signup"><span className='text-blue-400'>Create Account</span></Link></div>
     </div>
   )
 }
