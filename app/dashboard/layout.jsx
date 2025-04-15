@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Clock, Home, LayoutDashboard, LogOut, Menu, Settings, User2 } from "lucide-react"
+import { BarChart3, Clock, Home, LayoutDashboard, LogOut, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   SidebarProvider,
@@ -21,49 +21,54 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useEffect, useState } from "react"
 import axios from "axios"
+import { UserContext } from "../context/UserContext"
 
-export default function DashboardLayout({
-  children,
-}) {
+export default function DashboardLayout({ children }) {
   const pathname = usePathname()
-  const [user,setUser] = useState(null)
+  const [user, setUser] = useState(null)
   useEffect(() => {
-          const getUser = async () => {
-              const response = await axios.get('/api/user')
-              setUser(response.data.user);
-          }
-          getUser();
-      }, []);
+    const getUser = async () => {
+      const response = await axios.get("/api/user")
+      setUser(response.data.user)
+    }
+    getUser()
+  }, [])
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen">
-      {pathname === "/dashboard" && <DashboardSidebar pathname={pathname} user={user} />}
-      <main className="flex-1 bg-muted/40">
-          <div className="flex items-center justify-between p-4 md:hidden">
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-              <LayoutDashboard className="h-5 w-5" />
-              <span>AI Interview</span>
-            </Link>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0">
-                <DashboardSidebar pathname={pathname} user={user}/>
-              </SheetContent>
-            </Sheet>
-          </div>
-          <div className="p-4 md:p-6">{children}</div>
-        </main>
-      </div>
-    </SidebarProvider>
+    <UserContext.Provider value={{ user, setUser }}>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          {pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/interviews/") && (
+            <div className="hidden md:block">
+              <DashboardSidebar pathname={pathname} user={user} />
+            </div>
+          )}
+          <main className="flex-1 w-full max-w-full overflow-x-hidden">
+            <div className="flex items-center justify-between p-4 md:hidden sticky top-0 bg-background z-10 border-b">
+              <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+                <LayoutDashboard className="h-5 w-5" />
+                <span>AI Interview</span>
+              </Link>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0">
+                  <DashboardSidebar pathname={pathname} user={user} />
+                </SheetContent>
+              </Sheet>
+            </div>
+            <div className="md:p-6 w-full">{children}</div>
+          </main>
+        </div>
+      </SidebarProvider>
+    </UserContext.Provider>
   )
 }
 
-function DashboardSidebar({ pathname,user }) {
+function DashboardSidebar({ pathname, user }) {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-border">
@@ -95,17 +100,17 @@ function DashboardSidebar({ pathname,user }) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === "/dashboard/history"}>
-                  <Link href="/dashboard/history">
+                  {/* <Link href="/dashboard/history">
                     <Clock className="h-4 w-4" />
                     <span>History</span>
-                  </Link>
+                  </Link> */}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
+        {/* <SidebarGroup>
           <SidebarGroupLabel>Account</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -127,7 +132,7 @@ function DashboardSidebar({ pathname,user }) {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup> */}
       </SidebarContent>
       <SidebarFooter className="border-t border-border p-4">
         <div className="flex items-center gap-3">
@@ -147,4 +152,3 @@ function DashboardSidebar({ pathname,user }) {
     </Sidebar>
   )
 }
-

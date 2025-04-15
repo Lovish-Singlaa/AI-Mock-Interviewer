@@ -116,38 +116,38 @@ const page = () => {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{interviews?.length}</div>
-            <p className="text-xs text-muted-foreground">+2 from last week</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overallRating()}/5</div>
-            <p className="text-xs text-muted-foreground">+0.5 from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Practice Time</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{interviews?.length*30}</div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
-        
-      </div>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{interviews?.length}</div>
+                        <p className="text-xs text-muted-foreground">+2 from last week</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{overallRating()}/5</div>
+                        <p className="text-xs text-muted-foreground">+0.5 from last month</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Practice Time</CardTitle>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{interviews?.length * 30}</div>
+                        <p className="text-xs text-muted-foreground">This month</p>
+                    </CardContent>
+                </Card>
+
+            </div>
 
             <h1 className='text-2xl mt-4'>Your Interviews</h1>
             {
@@ -158,32 +158,32 @@ const page = () => {
                 ) :
                     interviews && interviews.length > 0 ? (
 
-                        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-4'>
-                            {interviews.map((interview, index) => (
+                        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4'>
+                            {interviews.slice(0,3).map((interview, index) => (
                                 <div key={index}>
                                     <Card>
-                                    <CardHeader className="pb-2">
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle className="text-base">{interview.jobRole}</CardTitle>
-                                        </div>
-                                        <CardDescription>{formatDate(interview.createdAt)}</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pb-2">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <Layers className="h-4 w-4 text-muted-foreground" />
-                                            <span>
-                                                {interview.jobDescription} • {interview.experience} years
-                                            </span>
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter>
-                                        <Button variant={interview.score === 0 ? "" : "outline"} size="sm" className="w-full" asChild>
-                                            <Link href={interview.score === 0 ? `/dashboard/interviews/${interview._id}` : `/dashboard/interviews/${interview._id}/feedback`}>
-                                                {interview.score === 0 ? "Start Interview" : "View Results"}
-                                            </Link>
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
+                                        <CardHeader className="pb-2">
+                                            <div className="flex items-center justify-between">
+                                                <CardTitle className="text-base">{interview.jobRole}</CardTitle>
+                                            </div>
+                                            <CardDescription>{formatDate(interview.createdAt)}</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="pb-2">
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Layers className="h-4 w-4 text-muted-foreground" />
+                                                <span>
+                                                    {interview.jobDescription} • {interview.experience} years
+                                                </span>
+                                            </div>
+                                        </CardContent>
+                                        <CardFooter>
+                                            <Button variant={interview.score === 0 ? "" : "outline"} size="sm" className="w-full" asChild>
+                                                <Link href={interview.score === 0 ? `/dashboard/interviews/${interview._id}` : `/dashboard/interviews/${interview._id}/feedback`}>
+                                                    {interview.score === 0 ? "Start Interview" : "View Results"}
+                                                </Link>
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
                                 </div>
 
                             ))}
@@ -224,24 +224,27 @@ const page = () => {
                 }
 
             </div>
+            <div className='flex justify-center text-center items-center my-4'>
+            {interviews?.length>2 && <Link href="/dashboard/interviews"><Button variant='outline' className="cursor-pointer">Show More</Button></Link>}
+            </div>
         </div>
 
-        
-)
 
-function overallRating() {
-    if (!interviews || interviews.length === 0) {
-        return 0;
+    )
+
+    function overallRating() {
+        if (!interviews || interviews.length === 0) {
+            return 0;
+        }
+
+        const totalScore = interviews.reduce((sum, interview) => {
+            return sum + (interview.score || 0);
+        }, 0);
+
+        const averageScore = totalScore / interviews.length;
+
+        return Math.round(averageScore);
     }
-
-    const totalScore = interviews.reduce((sum, interview) => {
-        return sum + (interview.score || 0);
-    }, 0);
-
-    const averageScore = totalScore / interviews.length;
-
-    return Math.round(averageScore);
-}
 
 }
 
