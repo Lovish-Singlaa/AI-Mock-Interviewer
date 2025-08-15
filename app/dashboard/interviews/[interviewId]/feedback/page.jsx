@@ -17,7 +17,7 @@ import {
 
 import axios from 'axios'
 import { useParams } from 'next/navigation'
-import { Calendar, ChevronsUpDownIcon, Clock, Download, HomeIcon, Layers, SendToBack } from 'lucide-react'
+import { Calendar, ChevronsUpDownIcon, Clock, Download, HomeIcon, Layers, SendToBack, Star, Trophy, TrendingUp, Sparkles, CheckCircle, MessageSquare, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
@@ -40,86 +40,183 @@ const page = () => {
         }
         fetchData();
     }, [])
+
+    const getScoreColor = (score) => {
+        if (score >= 4) return 'text-green-600 dark:text-green-400';
+        if (score >= 3) return 'text-yellow-600 dark:text-yellow-400';
+        return 'text-red-600 dark:text-red-400';
+    }
+
+    const getScoreBg = (score) => {
+        if (score >= 4) return 'bg-green-100 dark:bg-green-900/20';
+        if (score >= 3) return 'bg-yellow-100 dark:bg-yellow-900/20';
+        return 'bg-red-100 dark:bg-red-900/20';
+    }
+
+    const getScoreBorder = (score) => {
+        if (score >= 4) return 'border-green-200 dark:border-green-700';
+        if (score >= 3) return 'border-yellow-200 dark:border-yellow-700';
+        return 'border-red-200 dark:border-red-700';
+    }
+
     return (
-        <div className='p-3'>
-            <h1 className='text-3xl font-bold'>Interview Results</h1>
-            <p className='text-gray-500 mb-4'>Completed on {formatDate(interview?.createdAt)}</p>
+        <div className="p-4">
+            {/* Header */}
+            <div className="mb-8 animate-fade-in">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="relative">
+                        <Trophy className="h-8 w-8 text-primary" />
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                    </div>
+                    <h1 className="text-3xl font-bold text-gradient">Interview Results</h1>
+                </div>
+                <p className="text-muted-foreground">Completed on {formatDate(interview?.createdAt)}</p>
+            </div>
+
+            {/* Overall Score Card */}
+            {interview && (
+                <div className="mb-8 animate-scale-in">
+                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-2xl font-bold mb-2">Overall Performance</h2>
+                                    <p className="text-muted-foreground">Your interview score and feedback</p>
+                                </div>
+                                <div className={`p-6 rounded-2xl ${getScoreBg(interview?.score)} ${getScoreBorder(interview?.score)} border-2`}>
+                                    <div className="text-center">
+                                        <div className={`text-4xl font-bold ${getScoreColor(interview?.score)}`}>
+                                            {interview?.score}/5
+                                        </div>
+                                        <div className="flex items-center justify-center gap-1 mt-2">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star 
+                                                    key={i} 
+                                                    className={`h-4 w-4 ${i < interview?.score ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`} 
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
             <Tabs defaultValue="summary" className="w-full mx-auto">
-                <TabsList className='w-[90%] md:w-[60%] mx-auto'>
-                    <TabsTrigger value="summary">Summary</TabsTrigger>
-                    <TabsTrigger value="questions">Questions</TabsTrigger>
+                <TabsList className='w-full max-w-2xl mx-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg animate-fade-in' style={{ animationDelay: '0.2s' }}>
+                    <TabsTrigger value="summary" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                        <Target className="h-4 w-4 mr-2" />
+                        Summary
+                    </TabsTrigger>
+                    <TabsTrigger value="questions" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Questions
+                    </TabsTrigger>
                 </TabsList>
-                <TabsContent value="summary" className='w-[90%] md:w-[60%] mx-auto my-3'>
-                    <div>
-                        <h2 className='text-xl font-semibold my-3'>Overall Rating: {interview?.score}/5</h2>
-                        <Card>
+
+                <TabsContent value="summary" className='w-full max-w-2xl mx-auto my-6 animate-fade-in' style={{ animationDelay: '0.4s' }}>
+                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover-lift">
                             <CardHeader>
-                                <CardTitle>Interview Details</CardTitle>
+                            <CardTitle className="text-xl font-bold text-gradient">Interview Details</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-muted-foreground">Type</span>
+                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-700 dark:to-slate-600 rounded-xl">
+                                <span className="text-sm text-muted-foreground">Position</span>
                                     <div className="flex items-center gap-2">
-                                        <Layers className="h-4 w-4 text-muted-foreground"/>
+                                    <Layers className="h-4 w-4 text-primary"/>
                                         <span className="font-medium">{interview?.jobRole}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-muted-foreground">Experience</span>
+                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-teal-50 dark:from-slate-700 dark:to-slate-600 rounded-xl">
+                                <span className="text-sm text-muted-foreground">Experience Level</span>
                                     <span className="font-medium">{interview?.experience} years</span>
                                 </div>
-                                <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-slate-700 dark:to-slate-600 rounded-xl">
                                     <span className="text-sm text-muted-foreground">Duration</span>
                                     <div className="flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <Clock className="h-4 w-4 text-primary" />
                                         <span className="font-medium">30 minutes</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-slate-700 dark:to-slate-600 rounded-xl">
                                     <span className="text-sm text-muted-foreground">Date</span>
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    <Calendar className="h-4 w-4 text-primary" />
                                         <span className="font-medium">{formatDate(interview?.createdAt)}</span>
                                     </div>
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Link href='/dashboard' className="w-full"><Button variant="outline" className="w-full" >
-                                    <HomeIcon className="h-4 w-4 text-muted-foreground"/>
-                                    Go Home
+                            <Link href='/dashboard' className="w-full">
+                                <Button variant="outline" className="w-full btn-modern hover-lift">
+                                    <HomeIcon className="h-4 w-4 mr-2"/>
+                                    Back to Dashboard
                                 </Button>
                                 </Link>
                             </CardFooter>
                         </Card>
-
-                    </div>
                 </TabsContent>
-                <TabsContent value="questions" className='w-[90%] md:w-[60%] mx-auto my-3'>
-                    {interview?.questions.map((question, index) => (
-                        <Collapsible key={index}>
-                            <CollapsibleTrigger className='w-full text-left bg-secondary my-3 flex justify-between gap-2 p-1 rounded-lg'>
-                                <div className='w-[94%]'>Q{index + 1}: {question.question}</div>
-                                <ChevronsUpDownIcon />
+
+                <TabsContent value="questions" className='w-full max-w-4xl mx-auto my-6 animate-fade-in' style={{ animationDelay: '0.6s' }}>
+                    <div className="space-y-4">
+                        {interview?.questions?.map((question, index) => (
+                            <Collapsible key={index} className="animate-scale-in" style={{ animationDelay: `${0.8 + index * 0.1}s` }}>
+                                <CollapsibleTrigger className='w-full text-left bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 rounded-2xl p-4 hover-lift transition-all duration-200 flex justify-between items-center gap-4'>
+                                    <div className='flex items-center gap-3'>
+                                        <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                            {index + 1}
+                                        </div>
+                                        <div className='flex-1 text-left'>
+                                            <p className="font-medium line-clamp-2">{question.question}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreBg(question.rating)} ${getScoreBorder(question.rating)}`}>
+                                                    {question.rating}/5
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star 
+                                                            key={i} 
+                                                            className={`h-3 w-3 ${i < question.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`} 
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                    </div>
+                                    <ChevronsUpDownIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent>
-                                <div className='my-1'>
-                                    <p><strong>Rating: </strong>{question.rating}</p>
+                                <CollapsibleContent className="mt-4 space-y-4">
+                                    <div className='bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-700 rounded-2xl p-4'>
+                                        <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center gap-2">
+                                            <MessageSquare className="h-4 w-4" />
+                                            Your Answer
+                                        </h4>
+                                        <p className="text-red-700 dark:text-red-300">{question.userResponse}</p>
                                 </div>
-                                <div className='bg-red-200 my-1 p-2 rounded-md'>
-                                    <strong>Your Answer: </strong>
-                                    <p>{question.userResponse}</p>
+                                    <div className='bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-2xl p-4'>
+                                        <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+                                            <CheckCircle className="h-4 w-4" />
+                                            Preferred Answer
+                                        </h4>
+                                        <p className="text-green-700 dark:text-green-300">{question.answer}</p>
                                 </div>
-                                <div className='bg-green-200 my-1 p-2 rounded-md'>
-                                    <strong>Preferred Answer: </strong>
-                                    <p>{question.answer}</p>
+                                    {question.feedback && (
+                                        <div className='bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl p-4'>
+                                            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+                                                <TrendingUp className="h-4 w-4" />
+                                                AI Feedback
+                                            </h4>
+                                            <p className="text-blue-700 dark:text-blue-300">{question.feedback}</p>
                                 </div>
+                                    )}
                             </CollapsibleContent>
                         </Collapsible>
-
                     ))}
+                    </div>
                 </TabsContent>
             </Tabs>
-
         </div>
     )
 
@@ -128,15 +225,14 @@ const page = () => {
 
         const date = new Date(dateString);
         return new Intl.DateTimeFormat("en-US", {
-            month: "short", // Abbreviated month (e.g., Jan, Feb)
-            day: "numeric", // Day of the month
-            year: "numeric", // Full year
-            hour: "numeric", // Hour (12-hour format)
-            minute: "2-digit", // Minutes with leading zero
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
             hour12: true,
         }).format(date);
     }
-
 }
 
 export default page

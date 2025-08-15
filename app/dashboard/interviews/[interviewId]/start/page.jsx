@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react'
 import Webcam from 'react-webcam';
 import useSpeechToText from 'react-hook-speech-to-text';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { LightbulbIcon, MicIcon, Volume2Icon, WebcamIcon } from 'lucide-react';
+import { LightbulbIcon, MicIcon, Volume2Icon, WebcamIcon, Play, Square, Sparkles, ArrowRight, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { chatSession } from '@/utils/GeminiAIModal';
 
@@ -28,20 +28,21 @@ const page = () => {
     const [WebCamEnabled, setWebCamEnabled] = useState(true);
     const [userAnswer, setUserAnswer] = useState('');
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
 
     const router = useRouter();
 
     const handleSubmit = () => {
-        setShowConfirmDialog(true); // Show confirmation dialog
+        setShowConfirmDialog(true);
     };
 
     const handleConfirmEndInterview = () => {
-        setShowConfirmDialog(false); // Close the dialog
-        router.push(`/dashboard/interviews/${interviewId}/feedback`); // Redirect to feedback page
+        setShowConfirmDialog(false);
+        router.push(`/dashboard/interviews/${interviewId}/feedback`);
     };
 
     const handleCancelEndInterview = () => {
-        setShowConfirmDialog(false); // Close the dialog
+        setShowConfirmDialog(false);
     };
 
     const speakQues = (text) => {
@@ -60,9 +61,10 @@ const page = () => {
             stopSpeechToText();
             const latestAnswer = userAnswer + results.map((result) => result?.transcript).join("");
             if (latestAnswer.length < 10) {
-                toast.error('Error while saving your answer');
+                toast.error('Please provide a longer answer (at least 10 characters)');
                 return;
             }
+            
             // Save the answer
             const feedbackPrompt = `Question: ${interview?.questions[activeQuestion]?.question}, Answer: ${latestAnswer}. Based on given question and answer, what feedback would you like to give to the candidate in 3 to 5 lines and also give rating out of 5. Give feedback and rating in JSON format.`;
             const result = await chatSession.sendMessage(feedbackPrompt);
@@ -77,11 +79,12 @@ const page = () => {
                     questionIndex: activeQuestion
                 })
                 if(response.data.status === 200){
-                    toast.success("Answer saved succesfully!")
+                    toast.success("Answer saved successfully!")
+                    setAnsweredQuestions(prev => new Set([...prev, activeQuestion]));
                 }
             } catch (error) {
                 console.log(error);                
-                toast.error("Error: ",error)
+                toast.error("Error saving answer")
             }
         } else {
             console.log("Starting speech-to-text...");
@@ -129,84 +132,206 @@ const page = () => {
     }, [error]);
 
     return (
-        <>
-        <div className='w-full p-4 md:px-16 flex flex-col md:flex-row gap-6 overflow-x-hidden'>
-            {/* Questions Section */}
-            <div className='w-full md:w-[60%] border rounded-xl p-4'>
-                {/* Question Navigation */}
-                <div className='grid grid-cols-2 sm:grid-cols-3 md:flex gap-2 sm:gap-4 flex-wrap mb-4'>
-                    {interview?.questions?.map((question, index) => (
-                        <div key={index} className='w-full sm:w-auto'>
-                            <Button
-                                variant='outline'
-                                className={`w-full sm:w-auto rounded-xl border-2 border-black text-sm sm:text-base
-                                    ${activeQuestion === index
-                                        ? 'bg-purple-700 text-white hover:bg-purple-600 hover:text-white border-white'
-                                        : ''
-                                    }`
-                                }
-                                onClick={() => setActiveQuestion(index)}
-                            >
-                                Question #{index + 1}
-                            </Button>
+        <div className="p-4">
+            {/* Header */}
+            <div className="mb-6 animate-fade-in">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="relative">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                    </div>
+                    <h1 className="text-2xl font-bold text-gradient">Interview Session</h1>
+                </div>
+                <p className="text-muted-foreground">Position: {interview?.jobRole}</p>
+            </div>
+
+            <div className='w-full flex flex-col lg:flex-row gap-6'>
+                {/* Questions Section */}
+                <div className='w-full lg:w-[60%] bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 dark:border-slate-700/50 p-6 animate-slide-in-left'>
+                    {/* Question Navigation */}
+                    <div className='mb-6'>
+                        <h3 className="text-lg font-semibold mb-3">Question Progress</h3>
+                        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2'>
+                            {interview?.questions?.map((question, index) => (
+                                <Button
+                                    key={index}
+                                    variant='outline'
+                                    size="sm"
+                                    className={`relative rounded-xl border-2 transition-all duration-200 hover-lift ${
+                                        activeQuestion === index
+                                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg'
+                                            : answeredQuestions.has(index)
+                                            ? 'bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300'
+                                            : 'bg-white/50 dark:bg-slate-700/50 border-gray-300 dark:border-slate-600'
+                                    }`}
+                                    onClick={() => setActiveQuestion(index)}
+                                >
+                                    <span className="text-xs font-medium">Q{index + 1}</span>
+                                    {answeredQuestions.has(index) && (
+                                        <CheckCircle className="absolute -top-1 -right-1 h-3 w-3 text-green-600 dark:text-green-400" />
+                                    )}
+                                </Button>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
 
-                {/* Current Question */}
-                <div className='mt-4'>
-                    <h1 className='font-bold text-xl md:text-3xl mb-4'>Question {activeQuestion + 1}</h1>
-                    <div className='border border-gray-300 p-3 md:p-4 rounded-xl md:text-lg'>
-                        <p className='break-words'><strong>Question:</strong> {interview?.questions[activeQuestion]?.question}</p>
-                    <Volume2Icon className='cursor-pointer' onClick={()=>speakQues(interview?.questions[activeQuestion]?.question)}/>
+                    {/* Current Question */}
+                    <div className='mb-6 animate-fade-in'>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                {activeQuestion + 1}
+                            </div>
+                            <h2 className='font-bold text-xl md:text-2xl'>Question {activeQuestion + 1}</h2>
+                        </div>
+                        <div className='bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-700 dark:to-slate-600 p-6 rounded-2xl border border-blue-200 dark:border-slate-600'>
+                            <div className="flex items-start justify-between gap-4">
+                                <p className='text-lg leading-relaxed'>{interview?.questions[activeQuestion]?.question}</p>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => speakQues(interview?.questions[activeQuestion]?.question)}
+                                    className="hover-lift"
+                                >
+                                    <Volume2Icon className="h-5 w-5" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Helpful Tip */}
+                    <div className='bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-4 animate-fade-in' style={{ animationDelay: '0.2s' }}>
+                        <div className='flex gap-3 items-start'>
+                            <div className="p-2 bg-yellow-100 dark:bg-yellow-800 rounded-lg">
+                                <LightbulbIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400"/>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">Pro Tip</h4>
+                                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                                    Click "Start Recording" to begin your answer. Speak clearly and take your time. 
+                                    Click "Stop Recording" when you're done to save your response.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Helpful Tip */}
-                <div className='my-4 bg-blue-200 text-blue-500 rounded-xl border border-black p-4 '>
-                    <div className='flex gap-2'>
-                    <LightbulbIcon/>
-                    <strong>Helpful Tip!</strong>
+                {/* Webcam Section */}
+                <div className='w-full lg:w-[40%] bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 dark:border-slate-700/50 p-6 animate-slide-in-right'>
+                    <h3 className="text-lg font-semibold mb-4">Video Recording</h3>
+                    
+                    <div className='relative aspect-video mb-6 rounded-2xl overflow-hidden border-2 border-gray-200 dark:border-slate-600'>
+                        {WebCamEnabled ? (
+                            <Webcam 
+                                onUserMedia={() => setWebCamEnabled(true)} 
+                                onUserMediaError={() => setWebCamEnabled(false)} 
+                                className='w-full h-full object-cover' 
+                                mirrored={true} 
+                            />
+                        ) : (
+                            <div className='w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 flex flex-col justify-center items-center'>
+                                <WebcamIcon className='w-16 h-16 text-gray-400 dark:text-slate-500 mb-2' />
+                                <p className="text-sm text-gray-500 dark:text-slate-400">Camera not available</p>
+                            </div>
+                        )}
+                        
+                        {/* Recording indicator */}
+                        {isRecording && (
+                            <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium animate-pulse">
+                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                Recording
+                            </div>
+                        )}
                     </div>
-                    <div>Tap on Record Answer to record the answer of given question. After recording, stop the recording to save the answer. End the interview to get the feedback of the answered questions.</div>
+
+                    {/* Recording Controls */}
+                    <div className='space-y-4'>
+                        <Button 
+                            variant={isRecording ? "destructive" : "default"}
+                            size="lg"
+                            className={`w-full h-14 text-lg font-medium btn-modern hover-glow ${
+                                isRecording 
+                                    ? 'bg-red-600 hover:bg-red-700' 
+                                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                            }`}
+                            onClick={saveUserAnswer}
+                        >
+                            {isRecording ? (
+                                <div className="flex items-center gap-2">
+                                    <Square className="h-5 w-5" />
+                                    Stop Recording
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <Play className="h-5 w-5" />
+                                    Start Recording
+                                </div>
+                            )}
+                        </Button>
+
+                        {/* Progress indicator */}
+                        <div className="text-center">
+                            <p className="text-sm text-muted-foreground">
+                                {answeredQuestions.size} of {interview?.questions?.length || 0} questions answered
+                            </p>
+                            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 mt-2">
+                                <div 
+                                    className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${(answeredQuestions.size / (interview?.questions?.length || 1)) * 100}%` }}
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Webcam Section */}
-            <div className=' w-full md:w-[40%] h-auto md:min-h-[95%] border border-gray-300 p-4 rounded-xl'>
-                <div className='relative aspect-video mb-4'>
-                    {(WebCamEnabled) ? (
-                        <Webcam onUserMedia={()=>setWebCamEnabled(true)} onUserMediaError={()=>setWebCamEnabled(false)} className='rounded-xl w-full h-full object-cover' mirrored={true} />
-                    ) : (<div className='w-full h-full bg-gray-300 rounded-xl flex justify-center items-center'>
-                        <WebcamIcon className='w-20 h-20 md:w-40 md:h-40' /></div>)}
-                </div>
-                <div className='flex justify-center mt-4'>
-                    <Button variant="outline"
-                        className="w-full sm:w-2/3 md:w-1/3 bg-purple-700 text-white hover:bg-purple-600 hover:text-white"
-                        onClick={saveUserAnswer}
-                    >
-                        {isRecording ? <div className='flex justify-center items-center gap-1'><MicIcon/>Stop Recording</div> : 'Start Recording'}
-                    </Button>
-                </div>
-                
+            {/* Submit Button */}
+            <div className="flex justify-center mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <Button 
+                    size="lg"
+                    onClick={handleSubmit}
+                    className="btn-modern hover-glow bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-lg px-8 py-6"
+                >
+                    <ArrowRight className="mr-2 h-5 w-5" />
+                    End Interview & Get Feedback
+                </Button>
             </div>
-        </div>
-        <Button className='mx-auto w-20' onClick={handleSubmit}>Submit</Button>
-        {showConfirmDialog && (
-                <Dialog open={showConfirmDialog}>
-                    <DialogContent>
+
+            {/* Confirmation Dialog */}
+            {showConfirmDialog && (
+                <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                    <DialogContent className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-0 shadow-2xl">
                         <DialogHeader>
-                            <DialogTitle>End Interview</DialogTitle>
+                            <DialogTitle className="text-xl font-bold text-gradient">End Interview</DialogTitle>
                         </DialogHeader>
-                        <p>Are you sure you want to end the interview? You will be redirected to the feedback page.</p>
-                        <DialogFooter>
-                            <Button variant="destructive" onClick={handleCancelEndInterview}>Cancel</Button>
-                            <Button onClick={handleConfirmEndInterview}>Confirm</Button>
+                        <div className="py-4">
+                            <p className="text-muted-foreground mb-4">
+                                Are you sure you want to end the interview? You will be redirected to the feedback page to see your results.
+                            </p>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                                <p className="text-sm text-blue-700 dark:text-blue-300">
+                                    <strong>Note:</strong> You can always come back to complete unanswered questions later.
+                                </p>
+                            </div>
+                        </div>
+                        <DialogFooter className="gap-3">
+                            <Button 
+                                variant="outline" 
+                                onClick={handleCancelEndInterview}
+                                className="hover-lift"
+                            >
+                                Continue Interview
+                            </Button>
+                            <Button 
+                                onClick={handleConfirmEndInterview}
+                                className="btn-modern hover-glow bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                            >
+                                End Interview
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             )}
-        </>
+        </div>
     )
 }
 

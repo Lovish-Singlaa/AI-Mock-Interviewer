@@ -37,14 +37,14 @@ export default function DashboardLayout({ children }) {
   return (
     <UserContext.Provider value={{ user, setUser }}>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full">
+        <div className="flex min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
           {pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/interviews/") && (
             <div className="hidden md:block">
               <DashboardSidebar pathname={pathname} user={user} />
             </div>
           )}
           <main className="flex-1 w-full max-w-full overflow-x-hidden">
-            <div className="flex items-center justify-between p-4 md:hidden sticky top-0 bg-background z-10 border-b">
+            <div className="flex items-center justify-between p-4 md:hidden sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
               <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                 <LayoutDashboard className="h-5 w-5" />
                 <span>AI Interview</span>

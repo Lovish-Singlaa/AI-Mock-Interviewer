@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 
 export async function GET(request) {
     try {
+      await dbConnect();
       const cookie = request.headers.get('cookie');
       if (!cookie) return new Response('Unauthorized', { status: 401 });
   

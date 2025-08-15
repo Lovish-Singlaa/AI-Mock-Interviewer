@@ -24,23 +24,90 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { chatSession } from '@/utils/GeminiAIModal'
-import { Calendar, Clock, FileText, Layers, LoaderCircle, Star } from 'lucide-react'
+import { Calendar, Clock, FileText, Layers, LoaderCircle, Star, Plus, TrendingUp, Users, Target, Sparkles, BarChart3, Trophy, Zap, BookOpen, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { Router } from 'next/router'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
+// Interview categories and difficulty levels
+const interviewCategories = {
+    technical: {
+        name: 'Technical Interview',
+        description: 'Focus on technical skills, problem-solving, and coding abilities',
+        icon: '💻',
+        color: 'blue'
+    },
+    behavioral: {
+        name: 'Behavioral Interview',
+        description: 'Assess soft skills, past experiences, and cultural fit',
+        icon: '🤝',
+        color: 'green'
+    },
+    leadership: {
+        name: 'Leadership Interview',
+        description: 'Evaluate leadership potential and management skills',
+        icon: '👑',
+        color: 'purple'
+    },
+    'case-study': {
+        name: 'Case Study Interview',
+        description: 'Problem-solving scenarios and business analysis',
+        icon: '📊',
+        color: 'orange'
+    },
+    'system-design': {
+        name: 'System Design Interview',
+        description: 'Architecture and system design challenges',
+        icon: '🏗️',
+        color: 'red'
+    },
+    coding: {
+        name: 'Coding Interview',
+        description: 'Programming challenges and algorithm problems',
+        icon: '⚡',
+        color: 'yellow'
+    },
+    general: {
+        name: 'General Interview',
+        description: 'Mixed questions covering various aspects',
+        icon: '🎯',
+        color: 'gray'
+    }
+};
+
+const difficultyLevels = {
+    beginner: {
+        name: 'Beginner',
+        description: 'Suitable for entry-level positions and new graduates',
+        color: 'green'
+    },
+    intermediate: {
+        name: 'Intermediate',
+        description: 'For professionals with 2-5 years of experience',
+        color: 'yellow'
+    },
+    advanced: {
+        name: 'Advanced',
+        description: 'For senior positions and experienced professionals',
+        color: 'red'
+    }
+};
+
 const page = () => {
     const [openDialog, setOpenDialog] = useState(false);
-    const [jobRole, setJobRole] = useState();
-    const [jobDesc, setJobDesc] = useState();
-    const [jobExp, setJobExp] = useState();
+    const [jobRole, setJobRole] = useState('');
+    const [jobDesc, setJobDesc] = useState('');
+    const [jobExp, setJobExp] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('general');
+    const [selectedDifficulty, setSelectedDifficulty] = useState('intermediate');
+    const [questionCount, setQuestionCount] = useState(5);
     const [loading, setLoading] = useState(false);
-    const [jsonResponse, setJsonResponse] = useState();
     const [user, setUser] = useState(null);
     const [interviews, setInterviews] = useState(null)
     const [fetching, setFetching] = useState(false)
+    const [analytics, setAnalytics] = useState(null)
 
     const router = useRouter()
 
@@ -64,12 +131,28 @@ const page = () => {
     }, []);
 
     useEffect(() => {
-
         const getInterviews = async () => {
             try {
                 setFetching(true);
                 const response = await axios.get('/api/get-interviews', {})
                 setInterviews(response.data);
+                
+                // Calculate analytics
+                if (response.data && response.data.length > 0) {
+                    const completedInterviews = response.data.filter(interview => interview.score > 0);
+                    const totalScores = completedInterviews.reduce((sum, interview) => sum + interview.score, 0);
+                    const averageScore = completedInterviews.length > 0 ? totalScores / completedInterviews.length : 0;
+                    const bestScore = Math.max(...completedInterviews.map(i => i.score), 0);
+                    
+                    setAnalytics({
+                        totalInterviews: response.data.length,
+                        completedInterviews: completedInterviews.length,
+                        averageScore: Math.round(averageScore * 10) / 10,
+                        bestScore,
+                        totalPracticeTime: response.data.length * 30,
+                        improvementRate: calculateImprovementRate(completedInterviews)
+                    });
+                }
             } catch (error) {
                 console.error('Error fetching interviews:', error);
                 setInterviews([]);
@@ -80,172 +163,483 @@ const page = () => {
         if (user) getInterviews();
     }, [user])
 
+    const calculateImprovementRate = (interviews) => {
+        if (interviews.length < 2) return 0;
+        const sortedInterviews = interviews.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        const firstHalf = sortedInterviews.slice(0, Math.ceil(sortedInterviews.length / 2));
+        const secondHalf = sortedInterviews.slice(Math.ceil(sortedInterviews.length / 2));
+        
+        const firstHalfAvg = firstHalf.reduce((sum, i) => sum + i.score, 0) / firstHalf.length;
+        const secondHalfAvg = secondHalf.reduce((sum, i) => sum + i.score, 0) / secondHalf.length;
+        
+        return Math.round((secondHalfAvg - firstHalfAvg) * 10) / 10;
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const inputResp = "Job Position:" + jobRole + ",Job Description:" + jobDesc + ", Job Experience:" + jobExp + " years based on the given information generate " + process.env.NEXT_PUBLIC_NUMBER_QUESTIONS + " interview questions with their answers in json format"
-            const result = await chatSession.sendMessage(inputResp);
-            let responseText = result.response.text();
-            const cleanText = responseText.replace('```json', '').replace('```', '').trim();
+            // Use original chatSession with enhanced prompt
+            const prompt = `You are an expert interview coach specializing in ${selectedCategory} interviews. Generate ${questionCount} high-quality interview questions for a ${jobRole} position.
 
-            const jsonResp = JSON.parse(cleanText);
+Job Details:
+- Role: ${jobRole}
+- Description: ${jobDesc}
+- Experience Level: ${jobExp} years
+- Category: ${selectedCategory}
+- Difficulty: ${selectedDifficulty}
+
+Requirements:
+1. Questions should be specific to the role and experience level
+2. Include a mix of technical, behavioral, and situational questions
+3. Provide detailed model answers for each question
+4. Questions should be realistic and industry-standard
+5. Consider the candidate's experience level (${jobExp} years)
+
+Return the response in this exact JSON format:
+{
+  "questions": [
+    {
+      "question": "Question text here",
+      "answer": "Comprehensive model answer here"
+    }
+  ]
+}`;
+
+            const result = await chatSession.sendMessage(prompt);
+            const responseText = await result.response.text();
+            
+            // Clean and parse JSON with better error handling
+            let jsonResp;
+            try {
+                // Remove markdown code blocks and clean the text
+                let cleanText = responseText
+                    .replace(/```json\s*/g, '')
+                    .replace(/```\s*/g, '')
+                    .replace(/```js\s*/g, '')
+                    .replace(/```javascript\s*/g, '')
+                    .trim();
+                
+                // Try to find JSON object in the response
+                const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    cleanText = jsonMatch[0];
+                }
+                
+                jsonResp = JSON.parse(cleanText);
+            } catch (parseError) {
+                console.error('JSON Parse Error:', parseError);
+                console.error('Raw response:', responseText);
+            }
+
+            // Validate the response structure
+            if (!jsonResp || !jsonResp.questions || !Array.isArray(jsonResp.questions)) {
+                throw new Error('Invalid response structure from AI');
+            }
+
+            // Map the AI-generated questions to the enhanced schema
+            const enhancedQuestions = jsonResp.questions.map(q => ({
+                question: q.question || "Sample question",
+                answer: q.answer || "Sample answer",
+                userResponse: '',
+                feedback: '',
+                rating: 0,
+                timeSpent: 0,
+                category: selectedCategory,
+                difficulty: selectedDifficulty === 'beginner' ? 'easy' : selectedDifficulty === 'intermediate' ? 'medium' : 'hard',
+                hints: [],
+                keywords: [],
+                expectedDuration: 180
+            }));
 
             const response = await axios.post('/api/interviews', {
                 jobRole,
                 jobDesc,
                 jobExp,
-                questions: jsonResp,
+                category: selectedCategory,
+                difficulty: selectedDifficulty,
+                questions: enhancedQuestions,
                 userId: user?._id
             });
+            
             const interviewId = response.data.interviewId;
             toast.success('Interview generated successfully!');
-            router.push(`/dashboard/interviews/${interviewId}`)
+            router.push(`/dashboard/interviews/${interviewId}/start`)
             setOpenDialog(false);
             setLoading(false);
         } catch (error) {
             console.error('Error details:', error);
+            toast.error('Failed to generate interview. Please try again.');
             setLoading(false);
         }
     }
+
+    const getCategoryIcon = (category) => {
+        return interviewCategories[category]?.icon || '🎯';
+    }
+
+    const getCategoryColor = (category) => {
+        const colors = {
+            technical: 'from-blue-500 to-blue-600',
+            behavioral: 'from-green-500 to-green-600',
+            leadership: 'from-purple-500 to-purple-600',
+            'case-study': 'from-orange-500 to-orange-600',
+            'system-design': 'from-red-500 to-red-600',
+            coding: 'from-yellow-500 to-yellow-600',
+            general: 'from-gray-500 to-gray-600'
+        };
+        return colors[category] || colors.general;
+    }
+
     return (
-        <div className='p-2 md:p-4 lg:p-8'>
-            <div className='flex justify-between items-center mb-5'>
-                <h1 className='text-3xl font-bold'>Dashboard</h1>
-                <Button className="" onClick={() => setOpenDialog(true)}>+ New Interview</Button>
+        <div className='p-4 md:p-6 lg:p-8'>
+            {/* Header */}
+            <div className='flex justify-between items-center mb-8 animate-fade-in'>
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Sparkles className="h-8 w-8 text-primary" />
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                    </div>
+                    <div>
+                        <h1 className='text-3xl font-bold text-gradient'>Dashboard</h1>
+                        <p className="text-muted-foreground">Welcome back, {user?.name || 'User'}!</p>
+                    </div>
+                </div>
+                <div className="flex gap-2">
+                    <Button 
+                        className="btn-modern hover-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
+                        onClick={() => setOpenDialog(true)}
+                    >
+                        <Plus className="mr-2 h-4 w-4" />
+                        New Interview
+                    </Button>
+                </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
+            {/* Enhanced Stats Cards */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+                <Card className="hover-lift animate-slide-in-left bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
-                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                            <FileText className="h-4 w-4 text-white" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{interviews?.length}</div>
+                        <div className="text-2xl font-bold text-gradient">{analytics?.totalInterviews || 0}</div>
                         <p className="text-xs text-muted-foreground">+2 from last week</p>
                     </CardContent>
                 </Card>
-                <Card>
+
+                <Card className="hover-lift animate-slide-in-top bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg" style={{ animationDelay: '0.1s' }}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-                        <Star className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg">
+                            <Star className="h-4 w-4 text-white" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{overallRating()}/5</div>
-                        <p className="text-xs text-muted-foreground">+0.5 from last month</p>
+                        <div className="text-2xl font-bold text-gradient">{analytics?.averageScore || 0}/5</div>
+                        <p className="text-xs text-muted-foreground">
+                            {analytics?.improvementRate > 0 ? '+' : ''}{analytics?.improvementRate || 0} from last month
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+
+                <Card className="hover-lift animate-slide-in-top bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg" style={{ animationDelay: '0.2s' }}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Practice Time</CardTitle>
-                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg">
+                            <Clock className="h-4 w-4 text-white" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{interviews?.length * 30}</div>
+                        <div className="text-2xl font-bold text-gradient">{analytics?.totalPracticeTime || 0}m</div>
                         <p className="text-xs text-muted-foreground">This month</p>
                     </CardContent>
                 </Card>
 
+                <Card className="hover-lift animate-slide-in-right bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg" style={{ animationDelay: '0.3s' }}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Best Score</CardTitle>
+                        <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                            <Trophy className="h-4 w-4 text-white" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-gradient">{analytics?.bestScore || 0}/5</div>
+                        <p className="text-xs text-muted-foreground">Personal best</p>
+                    </CardContent>
+                </Card>
             </div>
 
-            <h1 className='text-2xl mt-4'>Your Interviews</h1>
-            {
-                fetching ? (
-                    <div className='flex justify-center items-center mt-4'>
-                        <LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                ) :
-                    interviews && interviews.length > 0 ? (
+            {/* Interview Templates */}
+            <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <div className="flex items-center gap-2 mb-6">
+                    <BookOpen className="h-6 w-6 text-primary" />
+                    <h2 className='text-2xl font-bold'>Quick Start Templates</h2>
+                </div>
+                
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {Object.entries(interviewCategories).map(([key, category]) => (
+                        <Card key={key} className="hover-lift bg-white/80 dark:bg-slate-800/50 backdrop-blur-sm border-0 shadow-lg cursor-pointer" onClick={() => {
+                            setSelectedCategory(key);
+                            setOpenDialog(true);
+                        }}>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-12 h-12 bg-gradient-to-br ${getCategoryColor(key)} rounded-xl flex items-center justify-center text-2xl`}>
+                                        {getCategoryIcon(key)}
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-lg">{category.name}</CardTitle>
+                                        <CardDescription className="text-sm">{category.description}</CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Zap className="h-4 w-4" />
+                                    <span>Click to start</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
 
-                        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4'>
-                            {interviews.slice(0,3).map((interview, index) => (
-                                <div key={index}>
-                                    <Card>
-                                        <CardHeader className="pb-2">
+            {/* Recent Interviews */}
+            <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                <div className="flex items-center gap-2 mb-6">
+                    <Target className="h-6 w-6 text-primary" />
+                    <h2 className='text-2xl font-bold'>Your Interviews</h2>
+                    </div>
+                
+                {fetching ? (
+                    <div className='flex justify-center items-center py-12'>
+                        <div className="flex items-center gap-3">
+                            <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+                            <span className="text-muted-foreground">Loading interviews...</span>
+                        </div>
+                    </div>
+                ) : interviews && interviews.length > 0 ? (
+                    <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                        {interviews.slice(0, 3).map((interview, index) => (
+                            <Card key={index} className="hover-lift bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg animate-scale-in" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
+                                <CardHeader className="pb-3">
                                             <div className="flex items-center justify-between">
-                                                <CardTitle className="text-base">{interview.jobRole}</CardTitle>
+                                        <CardTitle className="text-lg font-semibold">{interview.jobRole}</CardTitle>
+                                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                            interview.score === 0 
+                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' 
+                                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                        }`}>
+                                            {interview.score === 0 ? 'Pending' : 'Completed'}
+                                        </div>
                                             </div>
-                                            <CardDescription>{formatDate(interview.createdAt)}</CardDescription>
+                                    <CardDescription className="flex items-center gap-1">
+                                        <Calendar className="h-3 w-3" />
+                                        {formatDate(interview.createdAt)}
+                                    </CardDescription>
                                         </CardHeader>
-                                        <CardContent className="pb-2">
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Layers className="h-4 w-4 text-muted-foreground" />
+                                <CardContent className="pb-3">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                        <Layers className="h-4 w-4" />
                                                 <span>
-                                                    {interview.jobDescription} • {interview.experience} years
+                                            {interview.jobDescription.length>75 ? `${interview.jobDescription.slice(0,75)}...` : interview.jobDescription} • {interview.experience} years
                                                 </span>
                                             </div>
+                                    {interview.category && (
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className={`w-6 h-6 bg-gradient-to-br ${getCategoryColor(interview.category)} rounded-lg flex items-center justify-center text-xs text-white`}>
+                                                {getCategoryIcon(interview.category)}
+                                            </div>
+                                            <span className="text-xs font-medium capitalize">{interview.category}</span>
+                                        </div>
+                                    )}
+                                    {interview.score > 0 && (
+                                        <div className="flex items-center gap-2">
+                                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                                            <span className="text-sm font-medium">{interview.score}/5</span>
+                                        </div>
+                                    )}
                                         </CardContent>
                                         <CardFooter>
-                                            <Button variant={interview.score === 0 ? "" : "outline"} size="sm" className="w-full" asChild>
-                                                <Link href={interview.score === 0 ? `/dashboard/interviews/${interview._id}` : `/dashboard/interviews/${interview._id}/feedback`}>
+                                    <Button 
+                                        variant={interview.score === 0 ? "default" : "outline"} 
+                                        size="sm" 
+                                        className="w-full btn-modern" 
+                                        asChild
+                                    >
+                                        <Link href={interview.score === 0 ? `/dashboard/interviews/${interview._id}/start` : `/dashboard/interviews/${interview._id}/feedback`}>
                                                     {interview.score === 0 ? "Start Interview" : "View Results"}
                                                 </Link>
                                             </Button>
                                         </CardFooter>
                                     </Card>
-                                </div>
-
-                            ))}
-                        </div>)
-                        :
-                        <p className='text-gray-600 mt-4 my-2 text-xl w-full mx-auto'>No interviews found</p>
-            }
-            <div>
-                {openDialog && <Dialog open={openDialog}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Tell us more about the Job you are interviewing</DialogTitle>
-                            <DialogDescription className="p-2 text-black">
-                                <form onSubmit={handleSubmit}>
-                                    <div className='mb-2'>
-                                        <Label className="mb-1 text-md">Job Title</Label>
-                                        <Input onChange={(e) => setJobRole(e.target.value)} value={jobRole} placeholder="Ex. Frontend Developer" required />
+                        ))}
                                     </div>
-                                    <div className='mb-2'>
-                                        <Label className="mb-1 text-md">Describe the Job Role (in Short)</Label>
-                                        <Textarea onChange={(e) => setJobDesc(e.target.value)} value={jobDesc} placeholder="" required />
+                ) : (
+                    <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FileText className="h-8 w-8 text-white" />
                                     </div>
-                                    <div className='mb-2'>
-                                        <Label className="mb-1 text-md">Years of Experience</Label>
-                                        <Input onChange={(e) => setJobExp(e.target.value)} value={jobExp} placeholder="2" type="number" required />
-                                    </div>
-                                    <div className='flex justify-end gap-4'>
-                                        <Button variant="destructive" onClick={() => setOpenDialog(false)}>Close</Button>
-                                        <Button type="submit" disabled={loading}>
-                                            {loading ? <><LoaderCircle className="animate-spin" /> Generating</> : "Start Interview"}
+                        <h3 className="text-xl font-semibold mb-2">No interviews yet</h3>
+                        <p className="text-muted-foreground mb-6">Start your first interview to begin improving your skills</p>
+                        <Button 
+                            onClick={() => setOpenDialog(true)}
+                            className="btn-modern hover-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Your First Interview
                                         </Button>
                                     </div>
-                                </form>
+                )}
+            </div>
+
+            {/* Show More Button */}
+            {interviews?.length > 3 && (
+                <div className='flex justify-center animate-fade-in' style={{ animationDelay: '0.8s' }}>
+                    <Link href="/dashboard/interviews">
+                        <Button variant='outline' className="btn-modern hover-lift">
+                            View All Interviews
+                        </Button>
+                    </Link>
+                </div>
+            )}
+
+            {/* Enhanced New Interview Dialog */}
+            {openDialog && (
+                <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                    <DialogContent className="sm:max-w-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-0 shadow-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-gradient">Create New Interview</DialogTitle>
+                            <DialogDescription className="text-muted-foreground">
+                                Configure your interview settings and generate personalized questions.
                             </DialogDescription>
                         </DialogHeader>
-                    </DialogContent>
-                </Dialog>
-                }
-
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="jobRole" className="text-sm font-medium">Job Title</Label>
+                                    <Input 
+                                        id="jobRole"
+                                        value={jobRole} 
+                                        onChange={(e) => setJobRole(e.target.value)} 
+                                        placeholder="Ex. Frontend Developer" 
+                                        className="h-11 border-2 focus:border-primary transition-colors duration-200"
+                                        required 
+                                    />
             </div>
-            <div className='flex justify-center text-center items-center my-4'>
-            {interviews?.length>2 && <Link href="/dashboard/interviews"><Button variant='outline' className="cursor-pointer">Show More</Button></Link>}
+                                <div className="space-y-2">
+                                    <Label htmlFor="jobExp" className="text-sm font-medium">Years of Experience</Label>
+                                    <Input 
+                                        id="jobExp"
+                                        value={jobExp} 
+                                        onChange={(e) => setJobExp(e.target.value)} 
+                                        placeholder="2" 
+                                        type="number" 
+                                        className="h-11 border-2 focus:border-primary transition-colors duration-200"
+                                        required 
+                                    />
             </div>
         </div>
 
-
+                            <div className="space-y-2">
+                                <Label htmlFor="jobDesc" className="text-sm font-medium">Job Description</Label>
+                                <Textarea 
+                                    id="jobDesc"
+                                    value={jobDesc} 
+                                    onChange={(e) => setJobDesc(e.target.value)} 
+                                    placeholder="Brief description of the role and responsibilities..."
+                                    className="min-h-[80px] border-2 focus:border-primary transition-colors duration-200"
+                                    required 
+                                />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="category" className="text-sm font-medium">Interview Category</Label>
+                                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                        <SelectTrigger className="h-11 border-2 focus:border-primary">
+                                            <SelectValue placeholder="Select category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(interviewCategories).map(([key, category]) => (
+                                                <SelectItem key={key} value={key}>
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{category.icon}</span>
+                                                        <span>{category.name}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <Label htmlFor="difficulty" className="text-sm font-medium">Difficulty Level</Label>
+                                    <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                                        <SelectTrigger className="h-11 border-2 focus:border-primary">
+                                            <SelectValue placeholder="Select difficulty" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(difficultyLevels).map(([key, level]) => (
+                                                <SelectItem key={key} value={key}>
+                                                    {level.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <Label htmlFor="questionCount" className="text-sm font-medium">Number of Questions</Label>
+                                    <Select value={questionCount.toString()} onValueChange={(value) => setQuestionCount(parseInt(value))}>
+                                        <SelectTrigger className="h-11 border-2 focus:border-primary">
+                                            <SelectValue placeholder="Select count" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {[3, 5, 7, 10].map(count => (
+                                                <SelectItem key={count} value={count.toString()}>
+                                                    {count} questions
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-end gap-3 pt-4">
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    onClick={() => setOpenDialog(false)}
+                                    className="hover-lift"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    type="submit" 
+                                    disabled={loading}
+                                    className="btn-modern hover-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                >
+                                    {loading ? (
+                                        <div className="flex items-center gap-2">
+                                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                                            Generating...
+                                        </div>
+                                    ) : (
+                                        "Create Interview"
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            )}
+        </div>
     )
-
-    function overallRating() {
-        if (!interviews || interviews.length === 0) {
-            return 0;
-        }
-
-        const totalScore = interviews.reduce((sum, interview) => {
-            return sum + (interview.score || 0);
-        }, 0);
-
-        const averageScore = totalScore / interviews.length;
-
-        return Math.round(averageScore);
-    }
-
 }
 
 export default page
