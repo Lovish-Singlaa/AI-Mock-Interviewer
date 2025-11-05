@@ -6,9 +6,8 @@ import React, { useEffect, useState } from 'react'
 import Webcam from 'react-webcam';
 import useSpeechToText from 'react-hook-speech-to-text';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { LightbulbIcon, MicIcon, Volume2Icon, WebcamIcon, Play, Square, Sparkles, ArrowRight, CheckCircle } from 'lucide-react';
+import { LightbulbIcon, MicIcon, Volume2Icon, WebcamIcon, Play, Square, Sparkles, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { chatSession } from '@/utils/GeminiAIModal';
 
 const page = () => {
     const {
@@ -18,6 +17,7 @@ const page = () => {
         results,
         startSpeechToText,
         stopSpeechToText,
+        setResults,
     } = useSpeechToText({
         continuous: true,
         useLegacyResults: false
@@ -29,6 +29,8 @@ const page = () => {
     const [userAnswer, setUserAnswer] = useState('');
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
+    const [isSaving, setIsSaving] = useState(false);
+    const [fullTranscript, setFullTranscript] = useState('');
 
     const router = useRouter();
 
@@ -58,36 +60,84 @@ const page = () => {
     const saveUserAnswer = async () => {
         if (isRecording) {
             console.log("Stopping speech-to-text...");
-            stopSpeechToText();
-            const latestAnswer = userAnswer + results.map((result) => result?.transcript).join("");
-            if (latestAnswer.length < 10) {
-                toast.error('Please provide a longer answer (at least 10 characters)');
-                return;
-            }
             
-            // Save the answer
-            const feedbackPrompt = `Question: ${interview?.questions[activeQuestion]?.question}, Answer: ${latestAnswer}. Based on given question and answer, what feedback would you like to give to the candidate in 3 to 5 lines and also give rating out of 5. Give feedback and rating in JSON format.`;
-            const result = await chatSession.sendMessage(feedbackPrompt);
-            const cleanFeedback = (await result.response.text()).replace('```json', '').replace('```', '');
-            const feedback = JSON.parse(cleanFeedback);
-            console.log(feedback);
-            try {
-                const response = await axios.post('/api/save-user-answer',{
-                    interviewId,
-                    userResponse: latestAnswer,
-                    feedback,
-                    questionIndex: activeQuestion
-                })
-                if(response.data.status === 200){
-                    toast.success("Answer saved successfully!")
-                    setAnsweredQuestions(prev => new Set([...prev, activeQuestion]));
+            // Capture the current transcript INCLUDING interim results BEFORE stopping
+            const currentTranscript = results.map((result) => result?.transcript).join(" ");
+            const interim = interimResult || "";
+            const combinedTranscript = currentTranscript + (interim ? " " + interim : "");
+            
+            console.log("Results:", results);
+            console.log("Current Transcript:", currentTranscript);
+            console.log("Interim Result:", interim);
+            console.log("Combined:", combinedTranscript);
+            
+            // Now stop the recording
+            stopSpeechToText();
+            
+            // Wait a bit longer for any final processing
+            setTimeout(async () => {
+                // Get final transcripts again in case more came through
+                const finalTranscript = results.map((result) => result?.transcript).join(" ");
+                const finalInterim = interimResult || "";
+                const allTranscripts = finalTranscript + (finalInterim ? " " + finalInterim : "");
+                
+                // Use whichever is longer (to capture everything)
+                const bestTranscript = allTranscripts.length > combinedTranscript.length ? allTranscripts : combinedTranscript;
+                const finalAnswer = (userAnswer + " " + bestTranscript).trim();
+                
+                console.log("=== FINAL CAPTURE ===");
+                console.log("User Answer State:", userAnswer);
+                console.log("Best Transcript:", bestTranscript);
+                console.log("Final Answer:", finalAnswer);
+                console.log("Final Answer Length:", finalAnswer.length);
+                console.log("===================");
+                
+                if (finalAnswer.length < 10) {
+                    toast.error('Please provide a longer answer (at least 10 characters)');
+                    setIsSaving(false);
+                    return;
                 }
-            } catch (error) {
-                console.log(error);                
-                toast.error("Error saving answer")
-            }
+                
+                setIsSaving(true);
+                try {
+                    // Use the server-side API to evaluate and save the answer
+                    const response = await axios.put('/api/save-user-answer', {
+                        interviewId,
+                        userResponse: finalAnswer,
+                        questionIndex: activeQuestion
+                    });
+                    
+                    if(response.data.success){
+                        toast.success("Answer saved successfully!");
+                        setAnsweredQuestions(prev => new Set([...prev, activeQuestion]));
+                        // Clear everything for next question
+                        setUserAnswer('');
+                        setFullTranscript('');
+                        // Clear results if the function is available
+                        if (typeof setResults === 'function') {
+                            setResults([]);
+                        }
+                    } else {
+                        toast.error(response.data.message || "Failed to save answer");
+                    }
+                } catch (error) {
+                    console.log(error);
+                    const errorMessage = error.response?.data?.message || "Error saving answer";
+                    toast.error(errorMessage);
+                } finally {
+                    setIsSaving(false);
+                }
+            }, 1000); // Increased to 1000ms for better capture
+            
         } else {
             console.log("Starting speech-to-text...");
+            // Clear previous transcripts when starting new recording
+            setFullTranscript('');
+            setUserAnswer('');
+            if (typeof setResults === 'function') {
+                setResults([]);
+            }
+            
             try {
                 startSpeechToText();
             } catch (error) {
@@ -115,14 +165,23 @@ const page = () => {
     }, [])
 
     useEffect(() => {
-        results.map((result) => {
-            setUserAnswer(prevAns=>prevAns+result?.transcript);
+        // Update full transcript as we receive results
+        if (isRecording && results.length > 0) {
+            const currentTranscript = results.map((result) => result?.transcript).join(" ");
+            const interim = interimResult || "";
+            setFullTranscript(currentTranscript + (interim ? " " + interim : ""));
         }
-    )}, [results])
+    }, [results, interimResult, isRecording])
 
     useEffect(()=>{ 
+        // Clear answer when moving to a new question
         setUserAnswer('');
-    },[activeQuestion])
+        setFullTranscript('');
+        // Clear results if the function is available
+        if (typeof setResults === 'function') {
+            setResults([]);
+        }
+    },[activeQuestion, setResults])
 
     useEffect(() => {
         if (error) {
@@ -243,6 +302,42 @@ const page = () => {
                         )}
                     </div>
 
+                    {/* Real-time Transcription Display */}
+                    {(isRecording || fullTranscript || results.length > 0) && (
+                        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl">
+                            <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+                                {isRecording ? (
+                                    <>
+                                        <span className="relative flex h-3 w-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                        </span>
+                                        Listening...
+                                    </>
+                                ) : (
+                                    <>📝 Your Response:</>
+                                )}
+                            </h4>
+                            <p className="text-sm text-blue-700 dark:text-blue-300 min-h-[60px] whitespace-pre-wrap">
+                                {fullTranscript || results.map((result) => result?.transcript).join(" ") || "Start speaking..."}
+                                {isRecording && interimResult && (
+                                    <span className="text-blue-400 dark:text-blue-500 italic"> {interimResult}</span>
+                                )}
+                            </p>
+                            <div className="flex justify-between items-center mt-2">
+                                <p className="text-xs text-blue-600 dark:text-blue-400">
+                                    Characters: {(fullTranscript || results.map((result) => result?.transcript).join(" ")).length}
+                                </p>
+                                {(fullTranscript || results.map((result) => result?.transcript).join(" ")).length >= 10 && (
+                                    <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Ready to save
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Recording Controls */}
                     <div className='space-y-4'>
                         <Button 
@@ -254,8 +349,14 @@ const page = () => {
                                     : 'bg-blue-600 hover:bg-blue-700'
                             }`}
                             onClick={saveUserAnswer}
+                            disabled={isSaving}
                         >
-                            {isRecording ? (
+                            {isSaving ? (
+                                <div className="flex items-center gap-2">
+                                    <LoaderCircle className="h-5 w-5 animate-spin" />
+                                    Saving...
+                                </div>
+                            ) : isRecording ? (
                                 <div className="flex items-center gap-2">
                                     <Square className="h-5 w-5" />
                                     Stop Recording

@@ -25,7 +25,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { chatSession } from '@/utils/GeminiAIModal'
 import { Calendar, Clock, FileText, Layers, LoaderCircle, Star, Plus, TrendingUp, Users, Target, Sparkles, BarChart3, Trophy, Zap, BookOpen, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -179,79 +178,23 @@ const page = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            // Use original chatSession with enhanced prompt
-            const prompt = `You are an expert interview coach specializing in ${selectedCategory} interviews. Generate ${questionCount} high-quality interview questions for a ${jobRole} position.
+            // Call the server-side API to generate questions
+            const questionResponse = await axios.post('/api/generate-questions', {
+                jobRole,
+                jobDesc,
+                jobExp,
+                selectedCategory,
+                selectedDifficulty,
+                questionCount
+            });
 
-Job Details:
-- Role: ${jobRole}
-- Description: ${jobDesc}
-- Experience Level: ${jobExp} years
-- Category: ${selectedCategory}
-- Difficulty: ${selectedDifficulty}
-
-Requirements:
-1. Questions should be specific to the role and experience level
-2. Include a mix of technical, behavioral, and situational questions
-3. Provide detailed model answers for each question
-4. Questions should be realistic and industry-standard
-5. Consider the candidate's experience level (${jobExp} years)
-
-Return the response in this exact JSON format:
-{
-  "questions": [
-    {
-      "question": "Question text here",
-      "answer": "Comprehensive model answer here"
-    }
-  ]
-}`;
-
-            const result = await chatSession.sendMessage(prompt);
-            const responseText = await result.response.text();
-            
-            // Clean and parse JSON with better error handling
-            let jsonResp;
-            try {
-                // Remove markdown code blocks and clean the text
-                let cleanText = responseText
-                    .replace(/```json\s*/g, '')
-                    .replace(/```\s*/g, '')
-                    .replace(/```js\s*/g, '')
-                    .replace(/```javascript\s*/g, '')
-                    .trim();
-                
-                // Try to find JSON object in the response
-                const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    cleanText = jsonMatch[0];
-                }
-                
-                jsonResp = JSON.parse(cleanText);
-            } catch (parseError) {
-                console.error('JSON Parse Error:', parseError);
-                console.error('Raw response:', responseText);
+            if (!questionResponse.data.success) {
+                throw new Error(questionResponse.data.message || 'Failed to generate questions');
             }
 
-            // Validate the response structure
-            if (!jsonResp || !jsonResp.questions || !Array.isArray(jsonResp.questions)) {
-                throw new Error('Invalid response structure from AI');
-            }
+            const enhancedQuestions = questionResponse.data.questions;
 
-            // Map the AI-generated questions to the enhanced schema
-            const enhancedQuestions = jsonResp.questions.map(q => ({
-                question: q.question || "Sample question",
-                answer: q.answer || "Sample answer",
-                userResponse: '',
-                feedback: '',
-                rating: 0,
-                timeSpent: 0,
-                category: selectedCategory,
-                difficulty: selectedDifficulty === 'beginner' ? 'easy' : selectedDifficulty === 'intermediate' ? 'medium' : 'hard',
-                hints: [],
-                keywords: [],
-                expectedDuration: 180
-            }));
-
+            // Create the interview with the generated questions
             const response = await axios.post('/api/interviews', {
                 jobRole,
                 jobDesc,
@@ -269,7 +212,8 @@ Return the response in this exact JSON format:
             setLoading(false);
         } catch (error) {
             console.error('Error details:', error);
-            toast.error('Failed to generate interview. Please try again.');
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to generate interview. Please try again.';
+            toast.error(errorMessage);
             setLoading(false);
         }
     }
@@ -307,7 +251,7 @@ Return the response in this exact JSON format:
                 </div>
                 <div className="flex gap-2">
                     <Button 
-                        className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700" 
+                        className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700 cursor-pointer" 
                         onClick={() => setOpenDialog(true)}
                     >
                         <Plus className="mr-2 h-4 w-4" />
@@ -488,7 +432,7 @@ Return the response in this exact JSON format:
                         <p className="text-muted-foreground mb-6">Start your first interview to begin improving your skills</p>
                         <Button 
                             onClick={() => setOpenDialog(true)}
-                            className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700"
+                            className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700 cursor-pointer"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Create Your First Interview
