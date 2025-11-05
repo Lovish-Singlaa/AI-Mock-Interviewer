@@ -40,15 +40,15 @@ const Signup = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-pink-400/20 to-orange-600/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-100/40 dark:bg-blue-900/20 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-100/40 dark:bg-purple-900/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/50 p-8 animate-scale-in">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 p-8 animate-scale-in">
           {/* Header */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -127,7 +127,7 @@ const Signup = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl btn-modern hover-glow transition-all duration-300"
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl btn-modern hover-glow transition-all duration-300"
             >
               {loading ? (
                 <div className="flex items-center gap-2">

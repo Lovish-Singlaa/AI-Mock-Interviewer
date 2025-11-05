@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2 font-semibold animate-fade-in">
@@ -49,15 +49,15 @@ export default function HomePage() {
         <section className="py-20 md:py-28 relative overflow-hidden">
           {/* Background decoration */}
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-pink-400/20 to-orange-600/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-100/40 dark:bg-blue-900/20 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-100/40 dark:bg-purple-900/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
           </div>
           
           <div className="container flex flex-col items-center text-center relative z-10">
             <div className="animate-slide-in-top">
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
                 Practice Interviews with{" "}
-                <span className="text-gradient bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <span className="text-gradient">
                   AI
                 </span>
               </h1>
@@ -98,7 +98,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="features" className="py-20 bg-gradient-to-br from-slate-100/50 to-blue-100/50 dark:from-slate-800/50 dark:to-slate-900/50">
+        <section id="features" className="py-20 bg-slate-100 dark:bg-slate-800">
           <div className="container">
             <div className="mx-auto max-w-[58rem] text-center animate-fade-in">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
@@ -109,8 +109,8 @@ export default function HomePage() {
             </div>
 
             <div className="mx-auto mt-16 grid max-w-5xl gap-8 md:grid-cols-3">
-              <div className="flex flex-col items-center text-center group animate-slide-in-left hover-lift p-6 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="flex flex-col items-center text-center group animate-slide-in-left hover-lift p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <MessageSquare className="h-8 w-8" />
                 </div>
                 <h3 className="mt-6 text-xl font-semibold">Realistic Interviews</h3>
@@ -119,8 +119,8 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="flex flex-col items-center text-center group animate-slide-in-top hover-lift p-6 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm" style={{ animationDelay: '0.2s' }}>
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-teal-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="flex flex-col items-center text-center group animate-slide-in-top hover-lift p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700" style={{ animationDelay: '0.2s' }}>
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <Star className="h-8 w-8" />
                 </div>
                 <h3 className="mt-6 text-xl font-semibold">Detailed Feedback</h3>
@@ -129,8 +129,8 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="flex flex-col items-center text-center group animate-slide-in-right hover-lift p-6 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm" style={{ animationDelay: '0.4s' }}>
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="flex flex-col items-center text-center group animate-slide-in-right hover-lift p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700" style={{ animationDelay: '0.4s' }}>
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <TrendingUp className="h-8 w-8" />
                 </div>
                 <h3 className="mt-6 text-xl font-semibold">Progress Tracking</h3>
@@ -143,7 +143,7 @@ export default function HomePage() {
             {/* Additional features */}
             <div className="mx-auto mt-16 grid max-w-4xl gap-8 md:grid-cols-2">
               <div className="flex items-start gap-4 group animate-fade-in" style={{ animationDelay: '0.6s' }}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <Shield className="h-6 w-6" />
                 </div>
                 <div>
@@ -153,7 +153,7 @@ export default function HomePage() {
               </div>
 
               <div className="flex items-start gap-4 group animate-fade-in" style={{ animationDelay: '0.8s' }}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <Zap className="h-6 w-6" />
                 </div>
                 <div>
@@ -187,7 +187,7 @@ export default function HomePage() {
                   was spot on and helped me identify areas I needed to work on."
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                  <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
                     AJ
                   </div>
                   <div>
@@ -208,7 +208,7 @@ export default function HomePage() {
                   confident. I landed my dream job at a Fortune 500 company!"
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-pink-500 to-red-600 flex items-center justify-center text-white font-semibold">
+                  <div className="h-12 w-12 rounded-full bg-pink-600 flex items-center justify-center text-white font-semibold">
                     SC
                   </div>
                   <div>
@@ -229,7 +229,7 @@ export default function HomePage() {
                   recommend this to anyone preparing for job interviews."
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white font-semibold">
+                  <div className="h-12 w-12 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
                     MR
                   </div>
                   <div>
@@ -242,7 +242,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="faq" className="py-20 bg-gradient-to-br from-slate-100/50 to-blue-100/50 dark:from-slate-800/50 dark:to-slate-900/50">
+        <section id="faq" className="py-20 bg-slate-100 dark:bg-slate-800">
           <div className="container">
             <div className="mx-auto max-w-[58rem] text-center animate-fade-in">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
@@ -290,7 +290,7 @@ export default function HomePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
+        <section className="py-20 bg-blue-600">
           <div className="container text-center">
             <div className="mx-auto max-w-3xl animate-fade-in">
               <h2 className="text-3xl font-bold text-white sm:text-4xl md:text-5xl mb-6">
@@ -299,7 +299,7 @@ export default function HomePage() {
               <p className="text-xl text-blue-100 mb-8">
                 Join thousands of professionals who have improved their interview skills with AI
               </p>
-              <Button size="lg" asChild className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-6 btn-modern">
+              <Button size="lg" asChild className="bg-white text-blue-600 hover:bg-slate-50 text-lg px-8 py-6 btn-modern">
                 <Link href="/dashboard">
                   Start Your Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />

@@ -69,13 +69,13 @@ const page = () => {
 
     const getCategoryColor = (category) => {
         const colors = {
-            technical: 'from-blue-500 to-blue-600',
-            behavioral: 'from-green-500 to-green-600',
-            leadership: 'from-purple-500 to-purple-600',
-            'case-study': 'from-orange-500 to-orange-600',
-            'system-design': 'from-red-500 to-red-600',
-            coding: 'from-yellow-500 to-yellow-600',
-            general: 'from-gray-500 to-gray-600'
+            technical: 'bg-blue-600',
+            behavioral: 'bg-green-600',
+            leadership: 'bg-purple-600',
+            'case-study': 'bg-orange-600',
+            'system-design': 'bg-red-600',
+            coding: 'bg-yellow-600',
+            general: 'bg-gray-600'
         };
         return colors[category] || colors.general;
     }
@@ -155,7 +155,7 @@ const page = () => {
                     </div>
                 </div>
                 <Button 
-                    className="btn-modern hover-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700"
                     onClick={() => router.push('/dashboard')}
                 >
                     <Plus className="mr-2 h-4 w-4" />
@@ -224,7 +224,7 @@ const page = () => {
 
             {/* Filters and Search */}
             <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
+                <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg">
                     <CardContent className="p-4">
                         <div className="grid gap-4 md:grid-cols-3">
                             <div className="relative">
@@ -283,7 +283,7 @@ const page = () => {
                 ) : filteredAndSortedInterviews.length > 0 ? (
                     <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
                         {filteredAndSortedInterviews.map((interview, index) => (
-                            <Card key={interview._id} className="hover-lift bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg animate-scale-in" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
+                            <Card key={interview._id} className="hover-lift bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg animate-scale-in" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-lg font-semibold line-clamp-1">{interview.jobRole}</CardTitle>
@@ -311,7 +311,7 @@ const page = () => {
                                     
                                     {interview.category && (
                                         <div className="flex items-center gap-2 mb-3">
-                                            <div className={`w-6 h-6 bg-gradient-to-br ${getCategoryColor(interview.category)} rounded-lg flex items-center justify-center text-xs text-white`}>
+                                            <div className={`w-6 h-6 ${getCategoryColor(interview.category)} rounded-lg flex items-center justify-center text-xs text-white`}>
                                                 {getCategoryIcon(interview.category)}
                                             </div>
                                             <span className="text-xs font-medium capitalize">{interview.category}</span>
@@ -345,7 +345,7 @@ const page = () => {
                     </div>
                 ) : (
                     <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <FileText className="h-8 w-8 text-white" />
                         </div>
                         <h3 className="text-xl font-semibold mb-2">
@@ -360,7 +360,7 @@ const page = () => {
                         {!searchTerm && filterCategory === 'all' && (
                             <Button 
                                 onClick={() => router.push('/dashboard')}
-                                className="btn-modern hover-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700"
                             >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Create Your First Interview

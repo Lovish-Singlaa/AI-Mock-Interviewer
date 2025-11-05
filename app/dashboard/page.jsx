@@ -280,13 +280,13 @@ Return the response in this exact JSON format:
 
     const getCategoryColor = (category) => {
         const colors = {
-            technical: 'from-blue-500 to-blue-600',
-            behavioral: 'from-green-500 to-green-600',
-            leadership: 'from-purple-500 to-purple-600',
-            'case-study': 'from-orange-500 to-orange-600',
-            'system-design': 'from-red-500 to-red-600',
-            coding: 'from-yellow-500 to-yellow-600',
-            general: 'from-gray-500 to-gray-600'
+            technical: 'bg-blue-600',
+            behavioral: 'bg-green-600',
+            leadership: 'bg-purple-600',
+            'case-study': 'bg-orange-600',
+            'system-design': 'bg-red-600',
+            coding: 'bg-yellow-600',
+            general: 'bg-gray-600'
         };
         return colors[category] || colors.general;
     }
@@ -307,7 +307,7 @@ Return the response in this exact JSON format:
                 </div>
                 <div className="flex gap-2">
                     <Button 
-                        className="btn-modern hover-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
+                        className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700" 
                         onClick={() => setOpenDialog(true)}
                     >
                         <Plus className="mr-2 h-4 w-4" />
@@ -318,10 +318,10 @@ Return the response in this exact JSON format:
 
             {/* Enhanced Stats Cards */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-                <Card className="hover-lift animate-slide-in-left bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
+                <Card className="hover-lift animate-slide-in-left bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
-                        <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                        <div className="p-2 bg-blue-600 rounded-lg">
                             <FileText className="h-4 w-4 text-white" />
                         </div>
                     </CardHeader>
@@ -331,10 +331,10 @@ Return the response in this exact JSON format:
                     </CardContent>
                 </Card>
 
-                <Card className="hover-lift animate-slide-in-top bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg" style={{ animationDelay: '0.1s' }}>
+                <Card className="hover-lift animate-slide-in-top bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg" style={{ animationDelay: '0.1s' }}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-                        <div className="p-2 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg">
+                        <div className="p-2 bg-green-600 rounded-lg">
                             <Star className="h-4 w-4 text-white" />
                         </div>
                     </CardHeader>
@@ -346,10 +346,10 @@ Return the response in this exact JSON format:
                     </CardContent>
                 </Card>
 
-                <Card className="hover-lift animate-slide-in-top bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg" style={{ animationDelay: '0.2s' }}>
+                <Card className="hover-lift animate-slide-in-top bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg" style={{ animationDelay: '0.2s' }}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Practice Time</CardTitle>
-                        <div className="p-2 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg">
+                        <div className="p-2 bg-orange-600 rounded-lg">
                             <Clock className="h-4 w-4 text-white" />
                         </div>
                     </CardHeader>
@@ -359,10 +359,10 @@ Return the response in this exact JSON format:
                     </CardContent>
                 </Card>
 
-                <Card className="hover-lift animate-slide-in-right bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg" style={{ animationDelay: '0.3s' }}>
+                <Card className="hover-lift animate-slide-in-right bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg" style={{ animationDelay: '0.3s' }}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Best Score</CardTitle>
-                        <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                        <div className="p-2 bg-purple-600 rounded-lg">
                             <Trophy className="h-4 w-4 text-white" />
                         </div>
                     </CardHeader>
@@ -382,13 +382,13 @@ Return the response in this exact JSON format:
                 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {Object.entries(interviewCategories).map(([key, category]) => (
-                        <Card key={key} className="hover-lift bg-white/80 dark:bg-slate-800/50 backdrop-blur-sm border-0 shadow-lg cursor-pointer" onClick={() => {
+                        <Card key={key} className="hover-lift bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg cursor-pointer" onClick={() => {
                             setSelectedCategory(key);
                             setOpenDialog(true);
                         }}>
                             <CardHeader className="pb-3">
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-12 h-12 bg-gradient-to-br ${getCategoryColor(key)} rounded-xl flex items-center justify-center text-2xl`}>
+                                    <div className={`w-12 h-12 ${getCategoryColor(key)} rounded-xl flex items-center justify-center text-2xl`}>
                                         {getCategoryIcon(key)}
                                     </div>
                                     <div>
@@ -425,7 +425,7 @@ Return the response in this exact JSON format:
                 ) : interviews && interviews.length > 0 ? (
                     <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
                         {interviews.slice(0, 3).map((interview, index) => (
-                            <Card key={index} className="hover-lift bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg animate-scale-in" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
+                            <Card key={index} className="hover-lift bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg animate-scale-in" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
                                 <CardHeader className="pb-3">
                                             <div className="flex items-center justify-between">
                                         <CardTitle className="text-lg font-semibold">{interview.jobRole}</CardTitle>
@@ -451,7 +451,7 @@ Return the response in this exact JSON format:
                                             </div>
                                     {interview.category && (
                                         <div className="flex items-center gap-2 mb-2">
-                                            <div className={`w-6 h-6 bg-gradient-to-br ${getCategoryColor(interview.category)} rounded-lg flex items-center justify-center text-xs text-white`}>
+                                            <div className={`w-6 h-6 ${getCategoryColor(interview.category)} rounded-lg flex items-center justify-center text-xs text-white`}>
                                                 {getCategoryIcon(interview.category)}
                                             </div>
                                             <span className="text-xs font-medium capitalize">{interview.category}</span>
@@ -481,14 +481,14 @@ Return the response in this exact JSON format:
                                     </div>
                 ) : (
                     <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <FileText className="h-8 w-8 text-white" />
                                     </div>
                         <h3 className="text-xl font-semibold mb-2">No interviews yet</h3>
                         <p className="text-muted-foreground mb-6">Start your first interview to begin improving your skills</p>
                         <Button 
                             onClick={() => setOpenDialog(true)}
-                            className="btn-modern hover-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                            className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Create Your First Interview
@@ -511,7 +511,7 @@ Return the response in this exact JSON format:
             {/* Enhanced New Interview Dialog */}
             {openDialog && (
                 <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                    <DialogContent className="sm:max-w-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-0 shadow-2xl">
+                    <DialogContent className="sm:max-w-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-xl font-bold text-gradient">Create New Interview</DialogTitle>
                             <DialogDescription className="text-muted-foreground">
@@ -622,7 +622,7 @@ Return the response in this exact JSON format:
                                 <Button 
                                     type="submit" 
                                     disabled={loading}
-                                    className="btn-modern hover-glow bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                    className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700"
                                 >
                                     {loading ? (
                                         <div className="flex items-center gap-2">

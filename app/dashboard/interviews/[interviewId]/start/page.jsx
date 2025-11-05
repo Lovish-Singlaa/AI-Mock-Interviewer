@@ -147,25 +147,25 @@ const page = () => {
 
             <div className='w-full flex flex-col lg:flex-row gap-6'>
                 {/* Questions Section */}
-                <div className='w-full lg:w-[60%] bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 dark:border-slate-700/50 p-6 animate-slide-in-left'>
+                <div className='w-full lg:w-[60%] bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 animate-slide-in-left'>
                     {/* Question Navigation */}
                     <div className='mb-6'>
                         <h3 className="text-lg font-semibold mb-3">Question Progress</h3>
                         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2'>
                             {interview?.questions?.map((question, index) => (
-                                <Button
-                                    key={index}
-                                    variant='outline'
-                                    size="sm"
-                                    className={`relative rounded-xl border-2 transition-all duration-200 hover-lift ${
-                                        activeQuestion === index
-                                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg'
-                                            : answeredQuestions.has(index)
-                                            ? 'bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300'
-                                            : 'bg-white/50 dark:bg-slate-700/50 border-gray-300 dark:border-slate-600'
-                                    }`}
-                                    onClick={() => setActiveQuestion(index)}
-                                >
+                                    <Button
+                                        key={index}
+                                        variant='outline'
+                                        size="sm"
+                                        className={`relative rounded-xl border-2 transition-all duration-200 hover-lift ${
+                                            activeQuestion === index
+                                                ? 'bg-blue-600 text-white border-transparent shadow-lg'
+                                                : answeredQuestions.has(index)
+                                                ? 'bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300'
+                                                : 'bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600'
+                                        }`}
+                                        onClick={() => setActiveQuestion(index)}
+                                    >
                                     <span className="text-xs font-medium">Q{index + 1}</span>
                                     {answeredQuestions.has(index) && (
                                         <CheckCircle className="absolute -top-1 -right-1 h-3 w-3 text-green-600 dark:text-green-400" />
@@ -178,12 +178,12 @@ const page = () => {
                     {/* Current Question */}
                     <div className='mb-6 animate-fade-in'>
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                                 {activeQuestion + 1}
                             </div>
                             <h2 className='font-bold text-xl md:text-2xl'>Question {activeQuestion + 1}</h2>
                         </div>
-                        <div className='bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-700 dark:to-slate-600 p-6 rounded-2xl border border-blue-200 dark:border-slate-600'>
+                        <div className='bg-blue-50 dark:bg-slate-700 p-6 rounded-2xl border border-blue-200 dark:border-slate-600'>
                             <div className="flex items-start justify-between gap-4">
                                 <p className='text-lg leading-relaxed'>{interview?.questions[activeQuestion]?.question}</p>
                                 <Button
@@ -199,7 +199,7 @@ const page = () => {
                     </div>
 
                     {/* Helpful Tip */}
-                    <div className='bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-4 animate-fade-in' style={{ animationDelay: '0.2s' }}>
+                    <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-4 animate-fade-in' style={{ animationDelay: '0.2s' }}>
                         <div className='flex gap-3 items-start'>
                             <div className="p-2 bg-yellow-100 dark:bg-yellow-800 rounded-lg">
                                 <LightbulbIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400"/>
@@ -216,7 +216,7 @@ const page = () => {
                 </div>
 
                 {/* Webcam Section */}
-                <div className='w-full lg:w-[40%] bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 dark:border-slate-700/50 p-6 animate-slide-in-right'>
+                <div className='w-full lg:w-[40%] bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 animate-slide-in-right'>
                     <h3 className="text-lg font-semibold mb-4">Video Recording</h3>
                     
                     <div className='relative aspect-video mb-6 rounded-2xl overflow-hidden border-2 border-gray-200 dark:border-slate-600'>
@@ -228,7 +228,7 @@ const page = () => {
                                 mirrored={true} 
                             />
                         ) : (
-                            <div className='w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 flex flex-col justify-center items-center'>
+                            <div className='w-full h-full bg-gray-200 dark:bg-slate-700 flex flex-col justify-center items-center'>
                                 <WebcamIcon className='w-16 h-16 text-gray-400 dark:text-slate-500 mb-2' />
                                 <p className="text-sm text-gray-500 dark:text-slate-400">Camera not available</p>
                             </div>
@@ -251,7 +251,7 @@ const page = () => {
                             className={`w-full h-14 text-lg font-medium btn-modern hover-glow ${
                                 isRecording 
                                     ? 'bg-red-600 hover:bg-red-700' 
-                                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                                    : 'bg-blue-600 hover:bg-blue-700'
                             }`}
                             onClick={saveUserAnswer}
                         >
@@ -275,7 +275,7 @@ const page = () => {
                             </p>
                             <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 mt-2">
                                 <div 
-                                    className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                                     style={{ width: `${(answeredQuestions.size / (interview?.questions?.length || 1)) * 100}%` }}
                                 ></div>
                             </div>
@@ -289,7 +289,7 @@ const page = () => {
                 <Button 
                     size="lg"
                     onClick={handleSubmit}
-                    className="btn-modern hover-glow bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-lg px-8 py-6"
+                    className="btn-modern hover-glow bg-green-600 hover:bg-green-700 text-lg px-8 py-6"
                 >
                     <ArrowRight className="mr-2 h-5 w-5" />
                     End Interview & Get Feedback
@@ -299,7 +299,7 @@ const page = () => {
             {/* Confirmation Dialog */}
             {showConfirmDialog && (
                 <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-                    <DialogContent className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-0 shadow-2xl">
+                    <DialogContent className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-xl font-bold text-gradient">End Interview</DialogTitle>
                         </DialogHeader>
@@ -323,7 +323,7 @@ const page = () => {
                             </Button>
                             <Button 
                                 onClick={handleConfirmEndInterview}
-                                className="btn-modern hover-glow bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                className="btn-modern hover-glow bg-green-600 hover:bg-green-700"
                             >
                                 End Interview
                             </Button>

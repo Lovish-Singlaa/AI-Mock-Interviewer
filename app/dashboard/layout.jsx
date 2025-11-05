@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }) {
   return (
     <UserContext.Provider value={{ user, setUser }}>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="flex min-h-screen w-full bg-slate-50 dark:bg-slate-900">
           {pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/interviews/") && (
             <div className="hidden md:block">
               <DashboardSidebar pathname={pathname} user={user} />

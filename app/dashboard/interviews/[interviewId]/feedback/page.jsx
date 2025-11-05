@@ -76,7 +76,7 @@ const page = () => {
             {/* Overall Score Card */}
             {interview && (
                 <div className="mb-8 animate-scale-in">
-                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
+                    <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -105,42 +105,42 @@ const page = () => {
             )}
 
             <Tabs defaultValue="summary" className="w-full mx-auto">
-                <TabsList className='w-full max-w-2xl mx-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg animate-fade-in' style={{ animationDelay: '0.2s' }}>
-                    <TabsTrigger value="summary" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                <TabsList className='w-full max-w-2xl mx-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg animate-fade-in' style={{ animationDelay: '0.2s' }}>
+                    <TabsTrigger value="summary" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
                         <Target className="h-4 w-4 mr-2" />
                         Summary
                     </TabsTrigger>
-                    <TabsTrigger value="questions" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                    <TabsTrigger value="questions" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Questions
                     </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="summary" className='w-full max-w-2xl mx-auto my-6 animate-fade-in' style={{ animationDelay: '0.4s' }}>
-                    <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover-lift">
+                    <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg hover-lift">
                             <CardHeader>
                             <CardTitle className="text-xl font-bold text-gradient">Interview Details</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-700 dark:to-slate-600 rounded-xl">
+                            <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-slate-700 rounded-xl">
                                 <span className="text-sm text-muted-foreground">Position</span>
                                     <div className="flex items-center gap-2">
                                     <Layers className="h-4 w-4 text-primary"/>
                                         <span className="font-medium">{interview?.jobRole}</span>
                                     </div>
                                 </div>
-                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-teal-50 dark:from-slate-700 dark:to-slate-600 rounded-xl">
+                            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-slate-700 rounded-xl">
                                 <span className="text-sm text-muted-foreground">Experience Level</span>
                                     <span className="font-medium">{interview?.experience} years</span>
                                 </div>
-                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-slate-700 dark:to-slate-600 rounded-xl">
+                            <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-slate-700 rounded-xl">
                                     <span className="text-sm text-muted-foreground">Duration</span>
                                     <div className="flex items-center gap-2">
                                     <Clock className="h-4 w-4 text-primary" />
                                         <span className="font-medium">30 minutes</span>
                                     </div>
                                 </div>
-                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-slate-700 dark:to-slate-600 rounded-xl">
+                            <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-slate-700 rounded-xl">
                                     <span className="text-sm text-muted-foreground">Date</span>
                                     <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4 text-primary" />
@@ -163,9 +163,9 @@ const page = () => {
                     <div className="space-y-4">
                         {interview?.questions?.map((question, index) => (
                             <Collapsible key={index} className="animate-scale-in" style={{ animationDelay: `${0.8 + index * 0.1}s` }}>
-                                <CollapsibleTrigger className='w-full text-left bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 rounded-2xl p-4 hover-lift transition-all duration-200 flex justify-between items-center gap-4'>
+                                <CollapsibleTrigger className='w-full text-left bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 hover-lift transition-all duration-200 flex justify-between items-center gap-4'>
                                     <div className='flex items-center gap-3'>
-                                        <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                                             {index + 1}
                                         </div>
                                         <div className='flex-1 text-left'>
@@ -188,14 +188,14 @@ const page = () => {
                                     <ChevronsUpDownIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                             </CollapsibleTrigger>
                                 <CollapsibleContent className="mt-4 space-y-4">
-                                    <div className='bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-700 rounded-2xl p-4'>
+                                    <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl p-4'>
                                         <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center gap-2">
                                             <MessageSquare className="h-4 w-4" />
                                             Your Answer
                                         </h4>
                                         <p className="text-red-700 dark:text-red-300">{question.userResponse}</p>
                                 </div>
-                                    <div className='bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-2xl p-4'>
+                                    <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl p-4'>
                                         <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
                                             <CheckCircle className="h-4 w-4" />
                                             Preferred Answer
@@ -203,7 +203,7 @@ const page = () => {
                                         <p className="text-green-700 dark:text-green-300">{question.answer}</p>
                                 </div>
                                     {question.feedback && (
-                                        <div className='bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl p-4'>
+                                        <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl p-4'>
                                             <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
                                                 <TrendingUp className="h-4 w-4" />
                                                 AI Feedback
