@@ -6,8 +6,11 @@ import React, { useEffect, useState } from 'react'
 import Webcam from 'react-webcam';
 import useSpeechToText from 'react-hook-speech-to-text';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { LightbulbIcon, MicIcon, Volume2Icon, WebcamIcon, Play, Square, Sparkles, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
+import { LightbulbIcon, MicIcon, Volume2Icon, WebcamIcon, Play, Square, Sparkles, ArrowRight, CheckCircle, LoaderCircle, BrainCircuit, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const BRAND = { violet: '#6C3FFE', pink: '#FF5E7D', cyan: '#00D4FF', green: '#00C47A', amber: '#FFAA00' }
 
 const page = () => {
     const {
@@ -18,10 +21,8 @@ const page = () => {
         startSpeechToText,
         stopSpeechToText,
         setResults,
-    } = useSpeechToText({
-        continuous: true,
-        useLegacyResults: false
-    });
+    } = useSpeechToText({ continuous: true, useLegacyResults: false });
+
     const { interviewId } = useParams();
     const [interview, setInterview] = useState(null);
     const [activeQuestion, setActiveQuestion] = useState(0);
@@ -31,407 +32,442 @@ const page = () => {
     const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
     const [isSaving, setIsSaving] = useState(false);
     const [fullTranscript, setFullTranscript] = useState('');
-
     const router = useRouter();
-
-    const handleSubmit = () => {
-        setShowConfirmDialog(true);
-    };
 
     const handleConfirmEndInterview = () => {
         setShowConfirmDialog(false);
         router.push(`/dashboard/interviews/${interviewId}/feedback`);
     };
 
-    const handleCancelEndInterview = () => {
-        setShowConfirmDialog(false);
-    };
-
     const speakQues = (text) => {
-        if("speechSynthesis" in window){
-            const synth = window.speechSynthesis;
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
             const utterThis = new SpeechSynthesisUtterance(text);
-            synth.speak(utterThis);
-        } else{
+            window.speechSynthesis.speak(utterThis);
+        } else {
             alert('Your browser does not support text to speech!');
         }
     }
 
     const saveUserAnswer = async () => {
         if (isRecording) {
-            console.log("Stopping speech-to-text...");
-            
-            // Capture the current transcript INCLUDING interim results BEFORE stopping
-            const currentTranscript = results.map((result) => result?.transcript).join(" ");
+            const currentTranscript = results.map((r) => r?.transcript).join(" ");
             const interim = interimResult || "";
             const combinedTranscript = currentTranscript + (interim ? " " + interim : "");
-            
-            console.log("Results:", results);
-            console.log("Current Transcript:", currentTranscript);
-            console.log("Interim Result:", interim);
-            console.log("Combined:", combinedTranscript);
-            
-            // Now stop the recording
             stopSpeechToText();
-            
-            // Wait a bit longer for any final processing
+
             setTimeout(async () => {
-                // Get final transcripts again in case more came through
-                const finalTranscript = results.map((result) => result?.transcript).join(" ");
+                const finalTranscript = results.map((r) => r?.transcript).join(" ");
                 const finalInterim = interimResult || "";
                 const allTranscripts = finalTranscript + (finalInterim ? " " + finalInterim : "");
-                
-                // Use whichever is longer (to capture everything)
                 const bestTranscript = allTranscripts.length > combinedTranscript.length ? allTranscripts : combinedTranscript;
                 const finalAnswer = (userAnswer + " " + bestTranscript).trim();
-                
-                console.log("=== FINAL CAPTURE ===");
-                console.log("User Answer State:", userAnswer);
-                console.log("Best Transcript:", bestTranscript);
-                console.log("Final Answer:", finalAnswer);
-                console.log("Final Answer Length:", finalAnswer.length);
-                console.log("===================");
-                
+
                 if (finalAnswer.length < 10) {
                     toast.error('Please provide a longer answer (at least 10 characters)');
                     setIsSaving(false);
                     return;
                 }
-                
                 setIsSaving(true);
                 try {
-                    // Use the server-side API to evaluate and save the answer
                     const response = await axios.put('/api/save-user-answer', {
-                        interviewId,
-                        userResponse: finalAnswer,
-                        questionIndex: activeQuestion
+                        interviewId, userResponse: finalAnswer, questionIndex: activeQuestion
                     });
-                    
-                    if(response.data.success){
-                        toast.success("Answer saved successfully!");
+                    if (response.data.success) {
+                        toast.success("Answer saved! ✅");
                         setAnsweredQuestions(prev => new Set([...prev, activeQuestion]));
-                        // Clear everything for next question
                         setUserAnswer('');
                         setFullTranscript('');
-                        // Clear results if the function is available
-                        if (typeof setResults === 'function') {
-                            setResults([]);
-                        }
+                        if (typeof setResults === 'function') setResults([]);
                     } else {
                         toast.error(response.data.message || "Failed to save answer");
                     }
                 } catch (error) {
-                    console.log(error);
-                    const errorMessage = error.response?.data?.message || "Error saving answer";
-                    toast.error(errorMessage);
+                    toast.error(error.response?.data?.message || "Error saving answer");
                 } finally {
                     setIsSaving(false);
                 }
-            }, 1000); // Increased to 1000ms for better capture
-            
+            }, 1000);
         } else {
-            console.log("Starting speech-to-text...");
-            // Clear previous transcripts when starting new recording
             setFullTranscript('');
             setUserAnswer('');
-            if (typeof setResults === 'function') {
-                setResults([]);
-            }
-            
+            if (typeof setResults === 'function') setResults([]);
             try {
                 startSpeechToText();
             } catch (error) {
-                console.error("Error starting speech-to-text:", error);
                 toast.error("Failed to start recording. Please check your microphone permissions.");
             }
         }
     }
 
-    const fetchData = async () => {
-        try {
-            const response = await axios.get('/api/find-interview-by-id', {
-                params: {
-                    id: interviewId
-                }
-            });
-            setInterview(response.data);
-        } catch (error) {
-            console.error('Error fetching interview:', error);
-        }
-    }
-    
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get('/api/find-interview-by-id', { params: { id: interviewId } });
+                setInterview(response.data);
+            } catch (error) {
+                console.error('Error fetching interview:', error);
+            }
+        }
         fetchData();
     }, [])
 
     useEffect(() => {
-        // Update full transcript as we receive results
         if (isRecording && results.length > 0) {
-            const currentTranscript = results.map((result) => result?.transcript).join(" ");
+            const currentTranscript = results.map((r) => r?.transcript).join(" ");
             const interim = interimResult || "";
             setFullTranscript(currentTranscript + (interim ? " " + interim : ""));
         }
     }, [results, interimResult, isRecording])
 
-    useEffect(()=>{ 
-        // Clear answer when moving to a new question
+    useEffect(() => {
         setUserAnswer('');
         setFullTranscript('');
-        // Clear results if the function is available
-        if (typeof setResults === 'function') {
-            setResults([]);
-        }
-    },[activeQuestion, setResults])
+        if (typeof setResults === 'function') setResults([]);
+    }, [activeQuestion, setResults])
 
     useEffect(() => {
-        if (error) {
-            console.error("Speech-to-text error:", error);
-            toast.error("An error occurred with speech-to-text. Please try again.");
-        }
+        if (error) toast.error("Speech-to-text error. Please try again.");
     }, [error]);
 
+    const totalQ = interview?.questions?.length || 0
+    const progress = totalQ > 0 ? (answeredQuestions.size / totalQ) * 100 : 0
+
     return (
-        <div className="p-4">
-            {/* Header */}
-            <div className="mb-6 animate-fade-in">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="relative">
-                        <Sparkles className="h-6 w-6 text-primary" />
-                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                    </div>
-                    <h1 className="text-2xl font-bold text-gradient">Interview Session</h1>
-                </div>
-                <p className="text-muted-foreground">Position: {interview?.jobRole}</p>
-            </div>
+        <div className="min-h-screen p-4 md:p-6" style={{ background: '#F4F4FF' }}>
 
-            <div className='w-full flex flex-col lg:flex-row gap-6'>
-                {/* Questions Section */}
-                <div className='w-full lg:w-[60%] bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 animate-slide-in-left'>
-                    {/* Question Navigation */}
-                    <div className='mb-6'>
-                        <h3 className="text-lg font-semibold mb-3">Question Progress</h3>
-                        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2'>
-                            {interview?.questions?.map((question, index) => (
-                                    <Button
+            {/* ── HEADER ── */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between mb-6"
+            >
+                <div className="flex items-center gap-3">
+                    <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="text-3xl"
+                    >🎙️</motion.div>
+                    <div>
+                        <h1 className="text-2xl font-extrabold text-primary">Interview Session</h1>
+                        <p className="text-sm text-muted-foreground">
+                            {interview?.jobRole} · {interview?.category || 'General'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Progress pill */}
+                <div className="flex items-center gap-3">
+                    <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
+                        style={{ background: '#EEE5FF', color: BRAND.violet }}>
+                        <CheckCircle className="h-4 w-4" />
+                        {answeredQuestions.size}/{totalQ} done
+                    </div>
+                    <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                        <Button
+                            onClick={() => setShowConfirmDialog(true)}
+                            className="font-bold rounded-xl text-white btn-modern"
+                            style={{ background: BRAND.green }}
+                        >
+                            <Flag className="mr-2 h-4 w-4" /> End Interview
+                        </Button>
+                    </motion.div>
+                </div>
+            </motion.div>
+
+            {/* ── PROGRESS BAR ── */}
+            <motion.div
+                initial={{ opacity: 0, scaleX: 0 }}
+                animate={{ opacity: 1, scaleX: 1 }}
+                className="h-2 rounded-full mb-6 overflow-hidden"
+                style={{ background: '#E5E6F3', transformOrigin: 'left' }}
+            >
+                <motion.div
+                    className="h-full rounded-full"
+                    style={{ background: BRAND.violet }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.5 }}
+                />
+            </motion.div>
+
+            <div className="flex flex-col lg:flex-row gap-6">
+
+                {/* ── LEFT: QUESTIONS ── */}
+                <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full lg:w-[58%] rounded-3xl p-6 shadow-lg"
+                    style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}
+                >
+                    {/* Question bubbles */}
+                    <div className="mb-5">
+                        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9CA3AF' }}>Questions</p>
+                        <div className="flex flex-wrap gap-2">
+                            {interview?.questions?.map((_, index) => {
+                                const isAnswered = answeredQuestions.has(index)
+                                const isActive = activeQuestion === index
+                                return (
+                                    <motion.button
                                         key={index}
-                                        variant='outline'
-                                        size="sm"
-                                        className={`relative rounded-xl border-2 transition-all duration-200 hover-lift ${
-                                            activeQuestion === index
-                                                ? 'bg-blue-600 text-white border-transparent shadow-lg'
-                                                : answeredQuestions.has(index)
-                                                ? 'bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300'
-                                                : 'bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600'
-                                        }`}
+                                        whileHover={{ scale: 1.08 }}
+                                        whileTap={{ scale: 0.94 }}
                                         onClick={() => setActiveQuestion(index)}
+                                        className="relative w-10 h-10 rounded-xl font-bold text-sm transition-all"
+                                        style={{
+                                            background: isActive ? BRAND.violet : isAnswered ? '#00C47A' : '#F4F4FF',
+                                            color: isActive || isAnswered ? '#fff' : '#6B7280',
+                                            border: isActive ? 'none' : isAnswered ? 'none' : '1.5px solid #E5E6F3',
+                                            boxShadow: isActive ? `0 4px 14px ${BRAND.violet}50` : 'none'
+                                        }}
                                     >
-                                    <span className="text-xs font-medium">Q{index + 1}</span>
-                                    {answeredQuestions.has(index) && (
-                                        <CheckCircle className="absolute -top-1 -right-1 h-3 w-3 text-green-600 dark:text-green-400" />
-                                    )}
-                                </Button>
-                            ))}
+                                        {isAnswered && !isActive
+                                            ? <CheckCircle className="h-4 w-4 mx-auto" />
+                                            : <span>{index + 1}</span>
+                                        }
+                                    </motion.button>
+                                )
+                            })}
                         </div>
                     </div>
 
-                    {/* Current Question */}
-                    <div className='mb-6 animate-fade-in'>
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                {activeQuestion + 1}
-                            </div>
-                            <h2 className='font-bold text-xl md:text-2xl'>Question {activeQuestion + 1}</h2>
-                        </div>
-                        <div className='bg-blue-50 dark:bg-slate-700 p-6 rounded-2xl border border-blue-200 dark:border-slate-600'>
-                            <div className="flex items-start justify-between gap-4">
-                                <p className='text-lg leading-relaxed'>{interview?.questions[activeQuestion]?.question}</p>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => speakQues(interview?.questions[activeQuestion]?.question)}
-                                    className="hover-lift"
-                                >
-                                    <Volume2Icon className="h-5 w-5" />
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
+                    <div className="h-px mb-5" style={{ background: '#E5E6F3' }} />
 
-                    {/* Helpful Tip */}
-                    <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-4 animate-fade-in' style={{ animationDelay: '0.2s' }}>
-                        <div className='flex gap-3 items-start'>
-                            <div className="p-2 bg-yellow-100 dark:bg-yellow-800 rounded-lg">
-                                <LightbulbIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400"/>
+                    {/* Active Question */}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeQuestion}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -16 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-white text-sm"
+                                    style={{ background: BRAND.violet }}>
+                                    {activeQuestion + 1}
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: BRAND.violet }}>
+                                    Question {activeQuestion + 1} of {totalQ}
+                                </span>
                             </div>
-                            <div>
-                                <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">Pro Tip</h4>
-                                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                                    Click "Start Recording" to begin your answer. Speak clearly and take your time. 
-                                    Click "Stop Recording" when you're done to save your response.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Webcam Section */}
-                <div className='w-full lg:w-[40%] bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 animate-slide-in-right'>
-                    <h3 className="text-lg font-semibold mb-4">Video Recording</h3>
-                    
-                    <div className='relative aspect-video mb-6 rounded-2xl overflow-hidden border-2 border-gray-200 dark:border-slate-600'>
-                        {WebCamEnabled ? (
-                            <Webcam 
-                                onUserMedia={() => setWebCamEnabled(true)} 
-                                onUserMediaError={() => setWebCamEnabled(false)} 
-                                className='w-full h-full object-cover' 
-                                mirrored={true} 
-                            />
-                        ) : (
-                            <div className='w-full h-full bg-gray-200 dark:bg-slate-700 flex flex-col justify-center items-center'>
-                                <WebcamIcon className='w-16 h-16 text-gray-400 dark:text-slate-500 mb-2' />
-                                <p className="text-sm text-gray-500 dark:text-slate-400">Camera not available</p>
-                            </div>
-                        )}
-                        
-                        {/* Recording indicator */}
-                        {isRecording && (
-                            <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium animate-pulse">
-                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                                Recording
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Real-time Transcription Display */}
-                    {(isRecording || fullTranscript || results.length > 0) && (
-                        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl">
-                            <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
-                                {isRecording ? (
-                                    <>
-                                        <span className="relative flex h-3 w-3">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                                        </span>
-                                        Listening...
-                                    </>
-                                ) : (
-                                    <>📝 Your Response:</>
-                                )}
-                            </h4>
-                            <p className="text-sm text-blue-700 dark:text-blue-300 min-h-[60px] whitespace-pre-wrap">
-                                {fullTranscript || results.map((result) => result?.transcript).join(" ") || "Start speaking..."}
-                                {isRecording && interimResult && (
-                                    <span className="text-blue-400 dark:text-blue-500 italic"> {interimResult}</span>
-                                )}
-                            </p>
-                            <div className="flex justify-between items-center mt-2">
-                                <p className="text-xs text-blue-600 dark:text-blue-400">
-                                    Characters: {(fullTranscript || results.map((result) => result?.transcript).join(" ")).length}
-                                </p>
-                                {(fullTranscript || results.map((result) => result?.transcript).join(" ")).length >= 10 && (
-                                    <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                                        <CheckCircle className="h-3 w-3" />
-                                        Ready to save
+                            <div className="rounded-2xl p-5 mb-5 relative"
+                                style={{ background: '#EEE5FF', border: '1.5px solid #6C3FFE20' }}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <p className="text-base font-semibold leading-relaxed flex-1">
+                                        {interview?.questions[activeQuestion]?.question}
                                     </p>
+                                    <motion.button
+                                        whileHover={{ scale: 1.15 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={() => speakQues(interview?.questions[activeQuestion]?.question)}
+                                        className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                                        style={{ background: BRAND.violet }}
+                                        title="Read aloud"
+                                    >
+                                        <Volume2Icon className="h-4 w-4 text-white" />
+                                    </motion.button>
+                                </div>
+                            </div>
+
+                            {/* Tip */}
+                            <div className="rounded-2xl p-4 flex gap-3 items-start"
+                                style={{ background: '#FFFBEB', border: '1.5px solid #FFAA0030' }}>
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                    style={{ background: '#FFAA0020' }}>
+                                    <LightbulbIcon className="h-4 w-4" style={{ color: BRAND.amber }} />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold mb-1" style={{ color: BRAND.amber }}>Pro Tip</p>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                        Use the STAR method — Situation, Task, Action, Result. Click the speaker icon to hear the question read aloud.
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
+
+                    {/* Nav arrows */}
+                    <div className="flex items-center justify-between mt-6">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={activeQuestion === 0}
+                            onClick={() => setActiveQuestion(q => q - 1)}
+                            className="rounded-xl font-bold border-2"
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={activeQuestion === totalQ - 1}
+                            onClick={() => setActiveQuestion(q => q + 1)}
+                            className="rounded-xl font-bold border-2"
+                        >
+                            Next <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </div>
+                </motion.div>
+
+                {/* ── RIGHT: WEBCAM + MIC ── */}
+                <motion.div
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="w-full lg:w-[42%] flex flex-col gap-4"
+                >
+                    {/* Webcam card */}
+                    <div className="rounded-3xl overflow-hidden shadow-lg"
+                        style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}>
+                        <div className="h-1 w-full" style={{ background: isRecording ? BRAND.pink : BRAND.violet }} />
+                        <div className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#9CA3AF' }}>
+                                    Video Feed
+                                </p>
+                                {isRecording && (
+                                    <motion.div
+                                        animate={{ opacity: [1, 0.4, 1] }}
+                                        transition={{ duration: 1.2, repeat: Infinity }}
+                                        className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full text-white"
+                                        style={{ background: BRAND.pink }}
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                        REC
+                                    </motion.div>
+                                )}
+                            </div>
+                            <div className="relative rounded-2xl overflow-hidden aspect-video bg-gray-100"
+                                style={{ border: isRecording ? `2px solid ${BRAND.pink}` : '2px solid #E5E6F3' }}>
+                                {WebCamEnabled ? (
+                                    <Webcam
+                                        onUserMedia={() => setWebCamEnabled(true)}
+                                        onUserMediaError={() => setWebCamEnabled(false)}
+                                        className="w-full h-full object-cover"
+                                        mirrored={true}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                        <WebcamIcon className="w-12 h-12 text-gray-300" />
+                                        <p className="text-xs text-gray-400 font-medium">Camera unavailable</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
-                    )}
+                    </div>
 
-                    {/* Recording Controls */}
-                    <div className='space-y-4'>
-                        <Button 
-                            variant={isRecording ? "destructive" : "default"}
-                            size="lg"
-                            className={`w-full h-14 text-lg font-medium btn-modern hover-glow ${
-                                isRecording 
-                                    ? 'bg-red-600 hover:bg-red-700' 
-                                    : 'bg-blue-600 hover:bg-blue-700'
-                            }`}
+                    {/* Transcript card */}
+                    <AnimatePresence>
+                        {(isRecording || fullTranscript || results.length > 0) && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.97 }}
+                                className="rounded-3xl p-5 shadow-lg"
+                                style={{ background: isRecording ? '#FFF0F3' : '#F0FFF7', border: `1.5px solid ${isRecording ? BRAND.pink + '40' : BRAND.green + '40'}` }}
+                            >
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2 text-sm font-bold"
+                                        style={{ color: isRecording ? BRAND.pink : BRAND.green }}>
+                                        {isRecording ? (
+                                            <>
+                                                <motion.span
+                                                    animate={{ scale: [1, 1.4, 1] }}
+                                                    transition={{ duration: 1, repeat: Infinity }}
+                                                    className="w-2 h-2 rounded-full"
+                                                    style={{ background: BRAND.pink, display: 'inline-block' }}
+                                                />
+                                                Listening...
+                                            </>
+                                        ) : <><CheckCircle className="h-4 w-4" /> Your Response</>}
+                                    </div>
+                                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                        style={{
+                                            background: isRecording ? '#FECDD3' : '#D1FAE5',
+                                            color: isRecording ? BRAND.pink : BRAND.green
+                                        }}>
+                                        {(fullTranscript || results.map(r => r?.transcript).join(" ")).length} chars
+                                    </span>
+                                </div>
+                                <p className="text-sm leading-relaxed text-gray-700 min-h-[60px]">
+                                    {fullTranscript || results.map(r => r?.transcript).join(" ") || "Start speaking…"}
+                                    {isRecording && interimResult && (
+                                        <span className="text-gray-400 italic"> {interimResult}</span>
+                                    )}
+                                </p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Action buttons */}
+                    <div className="rounded-3xl p-5 shadow-lg"
+                        style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}>
+                        <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
                             onClick={saveUserAnswer}
                             disabled={isSaving}
+                            className="w-full h-14 rounded-2xl font-extrabold text-white text-base flex items-center justify-center gap-3 transition-all mb-3"
+                            style={{
+                                background: isSaving ? '#9CA3AF' : isRecording ? BRAND.pink : BRAND.violet,
+                                boxShadow: isRecording ? `0 4px 20px ${BRAND.pink}50` : `0 4px 20px ${BRAND.violet}50`
+                            }}
                         >
                             {isSaving ? (
-                                <div className="flex items-center gap-2">
-                                    <LoaderCircle className="h-5 w-5 animate-spin" />
-                                    Saving...
-                                </div>
+                                <><LoaderCircle className="h-5 w-5 animate-spin" /> Saving…</>
                             ) : isRecording ? (
-                                <div className="flex items-center gap-2">
-                                    <Square className="h-5 w-5" />
-                                    Stop Recording
-                                </div>
+                                <><Square className="h-5 w-5" /> Stop & Save Answer</>
                             ) : (
-                                <div className="flex items-center gap-2">
-                                    <Play className="h-5 w-5" />
-                                    Start Recording
-                                </div>
+                                <><MicIcon className="h-5 w-5" /> Start Recording</>
                             )}
-                        </Button>
+                        </motion.button>
 
-                        {/* Progress indicator */}
-                        <div className="text-center">
-                            <p className="text-sm text-muted-foreground">
-                                {answeredQuestions.size} of {interview?.questions?.length || 0} questions answered
+                        {/* AI note */}
+                        <div className="flex items-center gap-2 justify-center">
+                            <BrainCircuit className="h-4 w-4 shrink-0" style={{ color: BRAND.cyan }} />
+                            <p className="text-xs text-muted-foreground">
+                                AI evaluates your answer after saving
                             </p>
-                            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 mt-2">
-                                <div 
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${(answeredQuestions.size / (interview?.questions?.length || 1)) * 100}%` }}
-                                ></div>
-                            </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-center mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                <Button 
-                    size="lg"
-                    onClick={handleSubmit}
-                    className="btn-modern hover-glow bg-green-600 hover:bg-green-700 text-lg px-8 py-6"
-                >
-                    <ArrowRight className="mr-2 h-5 w-5" />
-                    End Interview & Get Feedback
-                </Button>
-            </div>
-
-            {/* Confirmation Dialog */}
-            {showConfirmDialog && (
-                <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-                    <DialogContent className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl font-bold text-gradient">End Interview</DialogTitle>
+            {/* ── CONFIRM DIALOG ── */}
+            <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                <DialogContent className="rounded-3xl overflow-hidden p-0" style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}>
+                    <div className="h-1.5 w-full" style={{ background: BRAND.green }} />
+                    <div className="p-8">
+                        <DialogHeader className="mb-4">
+                            <div className="text-5xl mb-3 text-center">🏁</div>
+                            <DialogTitle className="text-xl font-extrabold text-center text-primary">End Interview?</DialogTitle>
                         </DialogHeader>
-                        <div className="py-4">
-                            <p className="text-muted-foreground mb-4">
-                                Are you sure you want to end the interview? You will be redirected to the feedback page to see your results.
-                            </p>
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
-                                <p className="text-sm text-blue-700 dark:text-blue-300">
-                                    <strong>Note:</strong> You can always come back to complete unanswered questions later.
-                                </p>
-                            </div>
+                        <p className="text-muted-foreground text-center text-sm mb-5">
+                            You've answered <strong>{answeredQuestions.size}</strong> of <strong>{totalQ}</strong> questions.
+                            You'll be taken to your personalized feedback report.
+                        </p>
+                        <div className="flex gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowConfirmDialog(false)}
+                                className="flex-1 rounded-xl font-bold border-2"
+                            >
+                                Keep Going
+                            </Button>
+                            <motion.div className="flex-1" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                                <Button
+                                    onClick={handleConfirmEndInterview}
+                                    className="w-full btn-modern text-white font-bold rounded-xl"
+                                    style={{ background: BRAND.green }}
+                                >
+                                    <ArrowRight className="mr-2 h-4 w-4" /> View Results
+                                </Button>
+                            </motion.div>
                         </div>
-                        <DialogFooter className="gap-3">
-                            <Button 
-                                variant="outline" 
-                                onClick={handleCancelEndInterview}
-                                className="hover-lift"
-                            >
-                                Continue Interview
-                            </Button>
-                            <Button 
-                                onClick={handleConfirmEndInterview}
-                                className="btn-modern hover-glow bg-green-600 hover:bg-green-700"
-                            >
-                                End Interview
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
