@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,580 +8,520 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
-
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-
-import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar, Clock, FileText, Layers, LoaderCircle, Star, Plus, TrendingUp, Users, Target, Sparkles, BarChart3, Trophy, Zap, BookOpen, Settings } from 'lucide-react'
+import { Calendar, Clock, FileText, Layers, LoaderCircle, Star, Plus, TrendingUp, Trophy, Zap, BookOpen } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 
-// Interview categories and difficulty levels
 const interviewCategories = {
-    technical: {
-        name: 'Technical Interview',
-        description: 'Focus on technical skills, problem-solving, and coding abilities',
-        icon: '💻',
-        color: 'blue'
-    },
-    behavioral: {
-        name: 'Behavioral Interview',
-        description: 'Assess soft skills, past experiences, and cultural fit',
-        icon: '🤝',
-        color: 'green'
-    },
-    leadership: {
-        name: 'Leadership Interview',
-        description: 'Evaluate leadership potential and management skills',
-        icon: '👑',
-        color: 'purple'
-    },
-    'case-study': {
-        name: 'Case Study Interview',
-        description: 'Problem-solving scenarios and business analysis',
-        icon: '📊',
-        color: 'orange'
-    },
-    'system-design': {
-        name: 'System Design Interview',
-        description: 'Architecture and system design challenges',
-        icon: '🏗️',
-        color: 'red'
-    },
-    coding: {
-        name: 'Coding Interview',
-        description: 'Programming challenges and algorithm problems',
-        icon: '⚡',
-        color: 'yellow'
-    },
-    general: {
-        name: 'General Interview',
-        description: 'Mixed questions covering various aspects',
-        icon: '🎯',
-        color: 'gray'
-    }
-};
+    technical: { name: 'Technical', description: 'Problem-solving & coding skills', icon: '💻', color: '#6C3FFE' },
+    behavioral: { name: 'Behavioral', description: 'Soft skills & cultural fit', icon: '🤝', color: '#00C47A' },
+    leadership: { name: 'Leadership', description: 'Management & leadership', icon: '👑', color: '#FF5E7D' },
+    'case-study': { name: 'Case Study', description: 'Business analysis', icon: '📊', color: '#FFAA00' },
+    'system-design': { name: 'System Design', description: 'Architecture challenges', icon: '🏗️', color: '#00D4FF' },
+    coding: { name: 'Coding', description: 'Algorithm problems', icon: '⚡', color: '#FF5E7D' },
+    general: { name: 'General', description: 'Mixed questions', icon: '🎯', color: '#6C3FFE' },
+}
 
 const difficultyLevels = {
-    beginner: {
-        name: 'Beginner',
-        description: 'Suitable for entry-level positions and new graduates',
-        color: 'green'
-    },
-    intermediate: {
-        name: 'Intermediate',
-        description: 'For professionals with 2-5 years of experience',
-        color: 'yellow'
-    },
-    advanced: {
-        name: 'Advanced',
-        description: 'For senior positions and experienced professionals',
-        color: 'red'
+    beginner: { name: 'Beginner 🌱', description: 'Entry-level positions' },
+    intermediate: { name: 'Intermediate ⚡', description: '2-5 years experience' },
+    advanced: { name: 'Advanced 🔥', description: 'Senior positions' },
+}
+
+const fadeUp = { hidden: { opacity: 0, y: 32 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.4, 0, 0.2, 1] } } }
+const stagger = { show: { transition: { staggerChildren: 0.1 } } }
+
+function StatCard({ icon, emoji, value, label, bg, delay }) {
+    const [hovered, setHovered] = useState(false)
+    return (
+        <motion.div
+            variants={fadeUp}
+            className="stat-card p-5 rounded-2xl"
+            style={{ animationDelay: `${delay}s` }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+            <div className="flex items-start justify-between mb-3">
+                <motion.div
+                    className="text-3xl"
+                    animate={hovered ? { scale: 1.3, rotate: 15 } : { y: [0, -6, 0] }}
+                    transition={hovered ? { type: "spring", stiffness: 400, damping: 10 } : { duration: 2.5, repeat: Infinity }}
+                >
+                    {emoji}
+                </motion.div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ background: bg }}>
+                    {icon}
+                </div>
+            </div>
+            <div className="text-2xl font-extrabold mb-0.5" style={{ color: bg }}>{value}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{label}</div>
+        </motion.div>
+    )
+}
+
+function CategoryCard({ category, data, onClick }) {
+    const [hovered, setHovered] = useState(false)
+    return (
+        <motion.div
+            variants={fadeUp}
+            className="vibrant-card p-5 cursor-pointer flex flex-col gap-3"
+            onClick={onClick}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+            <div className="flex items-center gap-3">
+                <motion.div
+                    className="text-3xl"
+                    animate={hovered ? { scale: 1.35, rotate: 12 } : { y: [0, -6, 0] }}
+                    transition={hovered ? { type: "spring", stiffness: 350, damping: 12 } : { duration: 3, repeat: Infinity }}
+                >
+                    {data.icon}
+                </motion.div>
+                <div>
+                    <div className="font-bold text-sm">{data.name}</div>
+                    <div className="text-xs text-muted-foreground">{data.description}</div>
+                </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-semibold"
+                style={{ color: data.color }}>
+                <Zap className="h-3 w-3" /> Click to start
+            </div>
+        </motion.div>
+    )
+}
+
+function InterviewCard({ interview, index }) {
+    const [hovered, setHovered] = useState(false)
+    function formatDate(dateString) {
+        return new Intl.DateTimeFormat("en-US", {
+            month: "short", day: "numeric", year: "numeric",
+            hour: "numeric", minute: "2-digit",
+        }).format(new Date(dateString))
     }
-};
+    const categoryData = interviewCategories[interview.category] || interviewCategories.general
+    const isPending = interview.score === 0
+
+    return (
+        <motion.div
+            variants={fadeUp}
+            className="vibrant-card overflow-hidden flex flex-col"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+            {/* Color top bar */}
+            <div className="h-1 w-full" style={{ background: categoryData.color }} />
+            <div className="p-5 flex flex-col gap-3 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        <motion.div
+                            className="text-2xl shrink-0"
+                            animate={hovered ? { scale: 1.3, rotate: 12 } : {}}
+                            transition={{ type: "spring", stiffness: 400, damping: 12 }}
+                        >
+                            {categoryData.icon}
+                        </motion.div>
+                        <div>
+                            <h3 className="font-bold text-sm leading-tight">{interview.jobRole}</h3>
+                            <p className="text-xs text-muted-foreground capitalize">{interview.category}</p>
+                        </div>
+                    </div>
+                    <span className="shrink-0 text-xs font-bold px-2.5 py-1 rounded-full"
+                        style={{
+                            background: isPending ? "#FFF8E6" : "#E6FFF5",
+                            color: isPending ? "#FFAA00" : "#00C47A",
+                            border: `1.5px solid ${isPending ? "#FFAA0040" : "#00C47A40"}`
+                        }}>
+                        {isPending ? "⏳ Pending" : "✅ Done"}
+                    </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    {formatDate(interview.createdAt)}
+                </div>
+
+                <div className="text-xs text-muted-foreground line-clamp-2">
+                    {interview.jobDescription.length > 80
+                        ? `${interview.jobDescription.slice(0, 80)}...`
+                        : interview.jobDescription}
+                    {" • "}{interview.experience} yrs
+                </div>
+
+                {interview.score > 0 && (
+                    <div className="flex items-center gap-1.5">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-bold">{interview.score}/5</span>
+                    </div>
+                )}
+            </div>
+
+            <div className="px-5 pb-5">
+                <Button
+                    variant={isPending ? "default" : "outline"}
+                    size="sm"
+                    className={`w-full rounded-xl font-bold text-sm btn-modern ${isPending ? "text-white" : ""}`}
+                    style={isPending ? { background: "#6C3FFE" } : {}}
+                    asChild
+                >
+                    <Link href={isPending
+                        ? `/dashboard/interviews/${interview._id}/start`
+                        : `/dashboard/interviews/${interview._id}/feedback`
+                    }>
+                        {isPending ? "▶ Start Interview" : "📊 View Results"}
+                    </Link>
+                </Button>
+            </div>
+        </motion.div>
+    )
+}
 
 const page = () => {
-    const [openDialog, setOpenDialog] = useState(false);
-    const [jobRole, setJobRole] = useState('');
-    const [jobDesc, setJobDesc] = useState('');
-    const [jobExp, setJobExp] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('general');
-    const [selectedDifficulty, setSelectedDifficulty] = useState('intermediate');
-    const [questionCount, setQuestionCount] = useState(5);
-    const [loading, setLoading] = useState(false);
-    const [user, setUser] = useState(null);
+    const [openDialog, setOpenDialog] = useState(false)
+    const [jobRole, setJobRole] = useState('')
+    const [jobDesc, setJobDesc] = useState('')
+    const [jobExp, setJobExp] = useState('')
+    const [selectedCategory, setSelectedCategory] = useState('general')
+    const [selectedDifficulty, setSelectedDifficulty] = useState('intermediate')
+    const [questionCount, setQuestionCount] = useState(5)
+    const [loading, setLoading] = useState(false)
+    const [user, setUser] = useState(null)
     const [interviews, setInterviews] = useState(null)
     const [fetching, setFetching] = useState(false)
     const [analytics, setAnalytics] = useState(null)
 
     const router = useRouter()
 
-    function formatDate(dateString) {
-        const date = new Date(dateString)
-        return new Intl.DateTimeFormat("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-        }).format(date)
-    }
-
     useEffect(() => {
         const getUser = async () => {
             const response = await axios.get('/api/user')
-            setUser(response.data.user);
+            setUser(response.data.user)
         }
-        getUser();
-    }, []);
+        getUser()
+    }, [])
 
     useEffect(() => {
         const getInterviews = async () => {
             try {
-                setFetching(true);
+                setFetching(true)
                 const response = await axios.get('/api/get-interviews', {})
-                setInterviews(response.data);
-                
-                // Calculate analytics
+                setInterviews(response.data)
                 if (response.data && response.data.length > 0) {
-                    const completedInterviews = response.data.filter(interview => interview.score > 0);
-                    const totalScores = completedInterviews.reduce((sum, interview) => sum + interview.score, 0);
-                    const averageScore = completedInterviews.length > 0 ? totalScores / completedInterviews.length : 0;
-                    const bestScore = Math.max(...completedInterviews.map(i => i.score), 0);
-                    
+                    const completed = response.data.filter(i => i.score > 0)
+                    const avgScore = completed.length > 0
+                        ? completed.reduce((s, i) => s + i.score, 0) / completed.length : 0
+                    const best = Math.max(...completed.map(i => i.score), 0)
                     setAnalytics({
                         totalInterviews: response.data.length,
-                        completedInterviews: completedInterviews.length,
-                        averageScore: Math.round(averageScore * 10) / 10,
-                        bestScore,
+                        completedInterviews: completed.length,
+                        averageScore: Math.round(avgScore * 10) / 10,
+                        bestScore: best,
                         totalPracticeTime: response.data.length * 30,
-                        improvementRate: calculateImprovementRate(completedInterviews)
-                    });
+                        improvementRate: (() => {
+                            if (completed.length < 2) return 0
+                            const sorted = completed.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+                            const half = Math.ceil(sorted.length / 2)
+                            const a1 = sorted.slice(0, half).reduce((s, i) => s + i.score, 0) / half
+                            const a2 = sorted.slice(half).reduce((s, i) => s + i.score, 0) / (sorted.length - half)
+                            return Math.round((a2 - a1) * 10) / 10
+                        })()
+                    })
                 }
-            } catch (error) {
-                console.error('Error fetching interviews:', error);
-                setInterviews([]);
+            } catch {
+                setInterviews([])
             } finally {
-                setFetching(false);
+                setFetching(false)
             }
         }
-        if (user) getInterviews();
+        if (user) getInterviews()
     }, [user])
 
-    const calculateImprovementRate = (interviews) => {
-        if (interviews.length < 2) return 0;
-        const sortedInterviews = interviews.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        const firstHalf = sortedInterviews.slice(0, Math.ceil(sortedInterviews.length / 2));
-        const secondHalf = sortedInterviews.slice(Math.ceil(sortedInterviews.length / 2));
-        
-        const firstHalfAvg = firstHalf.reduce((sum, i) => sum + i.score, 0) / firstHalf.length;
-        const secondHalfAvg = secondHalf.reduce((sum, i) => sum + i.score, 0) / secondHalf.length;
-        
-        return Math.round((secondHalfAvg - firstHalfAvg) * 10) / 10;
-    }
-
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+        e.preventDefault()
+        setLoading(true)
         try {
-            // Call the server-side API to generate questions
-            const questionResponse = await axios.post('/api/generate-questions', {
-                jobRole,
-                jobDesc,
-                jobExp,
-                selectedCategory,
-                selectedDifficulty,
-                questionCount
-            });
-
-            if (!questionResponse.data.success) {
-                throw new Error(questionResponse.data.message || 'Failed to generate questions');
-            }
-
-            const enhancedQuestions = questionResponse.data.questions;
-
-            // Create the interview with the generated questions
+            const qRes = await axios.post('/api/generate-questions', {
+                jobRole, jobDesc, jobExp, selectedCategory, selectedDifficulty, questionCount
+            })
+            if (!qRes.data.success) throw new Error(qRes.data.message || 'Failed to generate')
             const response = await axios.post('/api/interviews', {
-                jobRole,
-                jobDesc,
-                jobExp,
+                jobRole, jobDesc, jobExp,
                 category: selectedCategory,
                 difficulty: selectedDifficulty,
-                questions: enhancedQuestions,
+                questions: qRes.data.questions,
                 userId: user?._id
-            });
-            
-            const interviewId = response.data.interviewId;
-            toast.success('Interview generated successfully!');
+            })
+            const interviewId = response.data.interviewId
+            toast.success('Interview ready! Let\'s go 🚀')
             router.push(`/dashboard/interviews/${interviewId}/start`)
-            setOpenDialog(false);
-            setLoading(false);
+            setOpenDialog(false)
         } catch (error) {
-            console.error('Error details:', error);
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to generate interview. Please try again.';
-            toast.error(errorMessage);
-            setLoading(false);
+            toast.error(error.response?.data?.message || error.message || 'Failed. Please try again.')
+        } finally {
+            setLoading(false)
         }
-    }
-
-    const getCategoryIcon = (category) => {
-        return interviewCategories[category]?.icon || '🎯';
-    }
-
-    const getCategoryColor = (category) => {
-        const colors = {
-            technical: 'bg-blue-600',
-            behavioral: 'bg-green-600',
-            leadership: 'bg-purple-600',
-            'case-study': 'bg-orange-600',
-            'system-design': 'bg-red-600',
-            coding: 'bg-yellow-600',
-            general: 'bg-gray-600'
-        };
-        return colors[category] || colors.general;
     }
 
     return (
-        <div className='p-4 md:p-6 lg:p-8'>
-            {/* Header */}
-            <div className='flex justify-between items-center mb-8 animate-fade-in'>
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <Sparkles className="h-8 w-8 text-primary" />
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+
+            {/* ── HEADER ── */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex justify-between items-center mb-8"
+            >
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-3xl">👋</span>
+                        <h1 className="text-3xl md:text-4xl font-extrabold text-primary">
+                            Dashboard
+                        </h1>
                     </div>
-                    <div>
-                        <h1 className='text-3xl font-bold text-gradient'>Dashboard</h1>
-                        <p className="text-muted-foreground">Welcome back, {user?.name || 'User'}!</p>
-                    </div>
+                    <p className="text-muted-foreground font-medium">
+                        Welcome back, <span className="text-primary font-bold">{user?.name?.split(" ")[0] || "Champ"}</span>! Ready to practice?
+                    </p>
                 </div>
-                <div className="flex gap-2">
-                    <Button 
-                        className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700 cursor-pointer" 
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                    <Button
+                        className="btn-modern text-white font-bold rounded-xl px-5 py-2.5 shadow-lg"
+                        style={{ background: "#6C3FFE" }}
                         onClick={() => setOpenDialog(true)}
                     >
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Interview
+                        <Plus className="mr-2 h-4 w-4" /> New Interview
                     </Button>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
 
-            {/* Enhanced Stats Cards */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-                <Card className="hover-lift animate-slide-in-left bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
-                        <div className="p-2 bg-blue-600 rounded-lg">
-                            <FileText className="h-4 w-4 text-white" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-gradient">{analytics?.totalInterviews || 0}</div>
-                        <p className="text-xs text-muted-foreground">+2 from last week</p>
-                    </CardContent>
-                </Card>
+            {/* ── STATS ── */}
+            <motion.div
+                variants={stagger}
+                initial="hidden"
+                animate="show"
+                className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-8"
+            >
+                <StatCard emoji="📋" icon={<FileText className="h-4 w-4" />} value={analytics?.totalInterviews || 0} label="Total Interviews" bg="#6C3FFE" delay={0} />
+                <StatCard emoji="⭐" icon={<Star className="h-4 w-4" />} value={`${analytics?.averageScore || 0}/5`} label="Avg Score" bg="#FF5E7D" delay={0.1} />
+                <StatCard emoji="⏱️" icon={<Clock className="h-4 w-4" />} value={`${analytics?.totalPracticeTime || 0}m`} label="Practice Time" bg="#FFAA00" delay={0.2} />
+                <StatCard emoji="🏆" icon={<Trophy className="h-4 w-4" />} value={`${analytics?.bestScore || 0}/5`} label="Best Score" bg="#00C47A" delay={0.3} />
+            </motion.div>
 
-                <Card className="hover-lift animate-slide-in-top bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg" style={{ animationDelay: '0.1s' }}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-                        <div className="p-2 bg-green-600 rounded-lg">
-                            <Star className="h-4 w-4 text-white" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-gradient">{analytics?.averageScore || 0}/5</div>
-                        <p className="text-xs text-muted-foreground">
-                            {analytics?.improvementRate > 0 ? '+' : ''}{analytics?.improvementRate || 0} from last month
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card className="hover-lift animate-slide-in-top bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg" style={{ animationDelay: '0.2s' }}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Practice Time</CardTitle>
-                        <div className="p-2 bg-orange-600 rounded-lg">
-                            <Clock className="h-4 w-4 text-white" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-gradient">{analytics?.totalPracticeTime || 0}m</div>
-                        <p className="text-xs text-muted-foreground">This month</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="hover-lift animate-slide-in-right bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg" style={{ animationDelay: '0.3s' }}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Best Score</CardTitle>
-                        <div className="p-2 bg-purple-600 rounded-lg">
-                            <Trophy className="h-4 w-4 text-white" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-gradient">{analytics?.bestScore || 0}/5</div>
-                        <p className="text-xs text-muted-foreground">Personal best</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Interview Templates */}
-            <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                <div className="flex items-center gap-2 mb-6">
-                    <BookOpen className="h-6 w-6 text-primary" />
-                    <h2 className='text-2xl font-bold'>Quick Start Templates</h2>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {Object.entries(interviewCategories).map(([key, category]) => (
-                        <Card key={key} className="hover-lift bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg cursor-pointer" onClick={() => {
-                            setSelectedCategory(key);
-                            setOpenDialog(true);
-                        }}>
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-12 h-12 ${getCategoryColor(key)} rounded-xl flex items-center justify-center text-2xl`}>
-                                        {getCategoryIcon(key)}
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-lg">{category.name}</CardTitle>
-                                        <CardDescription className="text-sm">{category.description}</CardDescription>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Zap className="h-4 w-4" />
-                                    <span>Click to start</span>
-                                </div>
-                            </CardContent>
-                        </Card>
+            {/* ── QUICK START ── */}
+            <motion.div
+                variants={stagger}
+                initial="hidden"
+                animate="show"
+                className="mb-10"
+            >
+                <motion.div variants={fadeUp} className="flex items-center gap-2.5 mb-5">
+                    <span className="text-2xl">⚡</span>
+                    <h2 className="text-xl font-extrabold">Quick Start</h2>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                        style={{ background: "#EEE5FF", color: "#6C3FFE" }}>
+                        Choose a category
+                    </span>
+                </motion.div>
+                <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {Object.entries(interviewCategories).map(([key, cat]) => (
+                        <CategoryCard key={key} category={key} data={cat}
+                            onClick={() => { setSelectedCategory(key); setOpenDialog(true) }} />
                     ))}
                 </div>
-            </div>
+            </motion.div>
 
-            {/* Recent Interviews */}
-            <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                <div className="flex items-center gap-2 mb-6">
-                    <Target className="h-6 w-6 text-primary" />
-                    <h2 className='text-2xl font-bold'>Your Interviews</h2>
+            {/* ── RECENT INTERVIEWS ── */}
+            <motion.div variants={stagger} initial="hidden" animate="show">
+                <motion.div variants={fadeUp} className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2.5">
+                        <span className="text-2xl">🎯</span>
+                        <h2 className="text-xl font-extrabold">Your Interviews</h2>
                     </div>
-                
+                    {interviews?.length > 3 && (
+                        <Link href="/dashboard/interviews">
+                            <Button variant="outline" size="sm" className="rounded-xl font-bold border-2 hover:border-primary">
+                                View All →
+                            </Button>
+                        </Link>
+                    )}
+                </motion.div>
+
                 {fetching ? (
-                    <div className='flex justify-center items-center py-12'>
-                        <div className="flex items-center gap-3">
-                            <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
-                            <span className="text-muted-foreground">Loading interviews...</span>
+                    <div className="flex justify-center items-center py-16">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="text-5xl animate-bounce-gentle">🔄</div>
+                            <p className="text-muted-foreground font-semibold">Loading interviews...</p>
                         </div>
                     </div>
                 ) : interviews && interviews.length > 0 ? (
-                    <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                    <motion.div
+                        variants={stagger}
+                        className="grid gap-5 md:grid-cols-2 lg:grid-cols-3"
+                    >
                         {interviews.slice(0, 3).map((interview, index) => (
-                            <Card key={index} className="hover-lift bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg animate-scale-in" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
-                                <CardHeader className="pb-3">
-                                            <div className="flex items-center justify-between">
-                                        <CardTitle className="text-lg font-semibold">{interview.jobRole}</CardTitle>
-                                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            interview.score === 0 
-                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' 
-                                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                        }`}>
-                                            {interview.score === 0 ? 'Pending' : 'Completed'}
-                                        </div>
-                                            </div>
-                                    <CardDescription className="flex items-center gap-1">
-                                        <Calendar className="h-3 w-3" />
-                                        {formatDate(interview.createdAt)}
-                                    </CardDescription>
-                                        </CardHeader>
-                                <CardContent className="pb-3">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                                        <Layers className="h-4 w-4" />
-                                                <span>
-                                            {interview.jobDescription.length>75 ? `${interview.jobDescription.slice(0,75)}...` : interview.jobDescription} • {interview.experience} years
-                                                </span>
-                                            </div>
-                                    {interview.category && (
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className={`w-6 h-6 ${getCategoryColor(interview.category)} rounded-lg flex items-center justify-center text-xs text-white`}>
-                                                {getCategoryIcon(interview.category)}
-                                            </div>
-                                            <span className="text-xs font-medium capitalize">{interview.category}</span>
-                                        </div>
-                                    )}
-                                    {interview.score > 0 && (
-                                        <div className="flex items-center gap-2">
-                                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                                            <span className="text-sm font-medium">{interview.score}/5</span>
-                                        </div>
-                                    )}
-                                        </CardContent>
-                                        <CardFooter>
-                                    <Button 
-                                        variant={interview.score === 0 ? "default" : "outline"} 
-                                        size="sm" 
-                                        className="w-full btn-modern" 
-                                        asChild
-                                    >
-                                        <Link href={interview.score === 0 ? `/dashboard/interviews/${interview._id}/start` : `/dashboard/interviews/${interview._id}/feedback`}>
-                                                    {interview.score === 0 ? "Start Interview" : "View Results"}
-                                                </Link>
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
+                            <InterviewCard key={interview._id} interview={interview} index={index} />
                         ))}
-                                    </div>
+                    </motion.div>
                 ) : (
-                    <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <FileText className="h-8 w-8 text-white" />
-                                    </div>
-                        <h3 className="text-xl font-semibold mb-2">No interviews yet</h3>
-                        <p className="text-muted-foreground mb-6">Start your first interview to begin improving your skills</p>
-                        <Button 
-                            onClick={() => setOpenDialog(true)}
-                            className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                    <motion.div variants={fadeUp}
+                        className="vibrant-card p-12 text-center flex flex-col items-center gap-4">
+                        <motion.div
+                            className="text-7xl"
+                            animate={{ y: [0, -16, 0], rotate: [0, 5, 0] }}
+                            transition={{ duration: 3, repeat: Infinity }}
                         >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create Your First Interview
-                                        </Button>
-                                    </div>
+                            🎤
+                        </motion.div>
+                        <h3 className="text-xl font-extrabold">No interviews yet!</h3>
+                        <p className="text-muted-foreground max-w-xs">
+                            Start your first AI-powered interview session and begin your journey to your dream job.
+                        </p>
+                        <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                            <Button
+                                onClick={() => setOpenDialog(true)}
+                                className="btn-modern text-white font-bold rounded-xl px-6 py-3"
+                                style={{ background: "#6C3FFE" }}
+                            >
+                                <Plus className="mr-2 h-4 w-4" /> Create First Interview
+                            </Button>
+                        </motion.div>
+                    </motion.div>
                 )}
-            </div>
+            </motion.div>
 
-            {/* Show More Button */}
-            {interviews?.length > 3 && (
-                <div className='flex justify-center animate-fade-in' style={{ animationDelay: '0.8s' }}>
-                    <Link href="/dashboard/interviews">
-                        <Button variant='outline' className="btn-modern hover-lift">
-                            View All Interviews
-                        </Button>
-                    </Link>
-                </div>
-            )}
+            {/* ── NEW INTERVIEW DIALOG ── */}
+            <AnimatePresence>
+                {openDialog && (
+                    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                        <DialogContent className="sm:max-w-2xl rounded-3xl overflow-hidden p-0"
+                            style={{ background: "#FFFFFF", border: "1.5px solid #E5E6F3" }}>
+                            {/* Rainbow top strip */}
+                            <div className="h-1.5 w-full" style={{ background: "#6C3FFE" }} />
+                            <div className="p-6 md:p-8">
+                                <DialogHeader className="mb-6">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <span className="text-3xl">🎯</span>
+                                        <DialogTitle className="text-2xl font-extrabold text-primary">
+                                            Create New Interview
+                                        </DialogTitle>
+                                    </div>
+                                    <DialogDescription className="text-muted-foreground">
+                                        Configure your session — our AI will generate personalized questions instantly.
+                                    </DialogDescription>
+                                </DialogHeader>
 
-            {/* Enhanced New Interview Dialog */}
-            {openDialog && (
-                <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                    <DialogContent className="sm:max-w-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl font-bold text-gradient">Create New Interview</DialogTitle>
-                            <DialogDescription className="text-muted-foreground">
-                                Configure your interview settings and generate personalized questions.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="jobRole" className="text-sm font-medium">Job Title</Label>
-                                    <Input 
-                                        id="jobRole"
-                                        value={jobRole} 
-                                        onChange={(e) => setJobRole(e.target.value)} 
-                                        placeholder="Ex. Frontend Developer" 
-                                        className="h-11 border-2 focus:border-primary transition-colors duration-200"
-                                        required 
-                                    />
-            </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="jobExp" className="text-sm font-medium">Years of Experience</Label>
-                                    <Input 
-                                        id="jobExp"
-                                        value={jobExp} 
-                                        onChange={(e) => setJobExp(e.target.value)} 
-                                        placeholder="2" 
-                                        type="number" 
-                                        className="h-11 border-2 focus:border-primary transition-colors duration-200"
-                                        required 
-                                    />
-            </div>
-        </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="jobDesc" className="text-sm font-medium">Job Description</Label>
-                                <Textarea 
-                                    id="jobDesc"
-                                    value={jobDesc} 
-                                    onChange={(e) => setJobDesc(e.target.value)} 
-                                    placeholder="Brief description of the role and responsibilities..."
-                                    className="min-h-[80px] border-2 focus:border-primary transition-colors duration-200"
-                                    required 
-                                />
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="category" className="text-sm font-medium">Interview Category</Label>
-                                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                                        <SelectTrigger className="h-11 border-2 focus:border-primary">
-                                            <SelectValue placeholder="Select category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {Object.entries(interviewCategories).map(([key, category]) => (
-                                                <SelectItem key={key} value={key}>
-                                                    <div className="flex items-center gap-2">
-                                                        <span>{category.icon}</span>
-                                                        <span>{category.name}</span>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="difficulty" className="text-sm font-medium">Difficulty Level</Label>
-                                    <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                                        <SelectTrigger className="h-11 border-2 focus:border-primary">
-                                            <SelectValue placeholder="Select difficulty" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {Object.entries(difficultyLevels).map(([key, level]) => (
-                                                <SelectItem key={key} value={key}>
-                                                    {level.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="questionCount" className="text-sm font-medium">Number of Questions</Label>
-                                    <Select value={questionCount.toString()} onValueChange={(value) => setQuestionCount(parseInt(value))}>
-                                        <SelectTrigger className="h-11 border-2 focus:border-primary">
-                                            <SelectValue placeholder="Select count" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {[3, 5, 7, 10].map(count => (
-                                                <SelectItem key={count} value={count.toString()}>
-                                                    {count} questions
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            
-                            <div className="flex justify-end gap-3 pt-4">
-                                <Button 
-                                    type="button" 
-                                    variant="outline" 
-                                    onClick={() => setOpenDialog(false)}
-                                    className="hover-lift"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button 
-                                    type="submit" 
-                                    disabled={loading}
-                                    className="btn-modern hover-glow bg-blue-600 hover:bg-blue-700"
-                                >
-                                    {loading ? (
-                                        <div className="flex items-center gap-2">
-                                            <LoaderCircle className="h-4 w-4 animate-spin" />
-                                            Generating...
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="jobRole" className="text-sm font-bold">Job Title</Label>
+                                            <Input
+                                                id="jobRole" value={jobRole}
+                                                onChange={(e) => setJobRole(e.target.value)}
+                                                placeholder="e.g. Frontend Developer"
+                                                className="h-11 rounded-xl border-2 focus:border-primary" required
+                                            />
                                         </div>
-                                    ) : (
-                                        "Create Interview"
-                                    )}
-                                </Button>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="jobExp" className="text-sm font-bold">Years of Experience</Label>
+                                            <Input
+                                                id="jobExp" value={jobExp}
+                                                onChange={(e) => setJobExp(e.target.value)}
+                                                placeholder="e.g. 3" type="number"
+                                                className="h-11 rounded-xl border-2 focus:border-primary" required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="jobDesc" className="text-sm font-bold">Job Description</Label>
+                                        <Textarea
+                                            id="jobDesc" value={jobDesc}
+                                            onChange={(e) => setJobDesc(e.target.value)}
+                                            placeholder="Brief description of the role and responsibilities..."
+                                            className="min-h-[80px] rounded-xl border-2 focus:border-primary" required
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-bold">Interview Category</Label>
+                                            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                                <SelectTrigger className="h-11 rounded-xl border-2 focus:border-primary">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.entries(interviewCategories).map(([key, cat]) => (
+                                                        <SelectItem key={key} value={key}>
+                                                            <div className="flex items-center gap-2">
+                                                                <span>{cat.icon}</span>
+                                                                <span>{cat.name}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-bold">Difficulty</Label>
+                                            <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                                                <SelectTrigger className="h-11 rounded-xl border-2 focus:border-primary">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.entries(difficultyLevels).map(([key, lvl]) => (
+                                                        <SelectItem key={key} value={key}>{lvl.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-bold">No. of Questions</Label>
+                                            <Select value={questionCount.toString()} onValueChange={(v) => setQuestionCount(parseInt(v))}>
+                                                <SelectTrigger className="h-11 rounded-xl border-2 focus:border-primary">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {[3, 5, 7, 10].map(c => (
+                                                        <SelectItem key={c} value={c.toString()}>{c} questions</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-2">
+                                        <Button type="button" variant="outline" onClick={() => setOpenDialog(false)}
+                                            className="rounded-xl font-bold border-2">
+                                            Cancel
+                                        </Button>
+                                        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                                            <Button
+                                                type="submit" disabled={loading}
+                                                className="btn-modern text-white font-bold rounded-xl px-7"
+                                                style={{ background: "#6C3FFE" }}
+                                            >
+                                                {loading ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full spinner" />
+                                                        Generating...
+                                                    </div>
+                                                ) : "🚀 Create Interview"}
+                                            </Button>
+                                        </motion.div>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
-            )}
+                        </DialogContent>
+                    </Dialog>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

@@ -1,340 +1,467 @@
+"use client"
 import Link from "next/link"
-import { ArrowRight, CheckCircle2, LayoutDashboard, MessageSquare, Star, Sparkles, Users, TrendingUp, Shield, Zap } from "lucide-react"
+import { ArrowRight, CheckCircle2, MessageSquare, Star, Sparkles, TrendingUp, Shield, Zap, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { motion, useInView } from "framer-motion"
+import { useRef, useState } from "react"
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] } }
+}
+const fadeLeft = {
+  hidden: { opacity: 0, x: -40 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] } }
+}
+const fadeRight = {
+  hidden: { opacity: 0, x: 40 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] } }
+}
+const stagger = {
+  show: { transition: { staggerChildren: 0.12 } }
+}
+
+function FloatingEmoji({ emoji, className, delay = 0 }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <motion.div
+      className={`text-5xl select-none cursor-default absolute ${className}`}
+      animate={hovered ? { scale: 1.4, rotate: 15 } : { y: [0, -16, 0], rotate: [0, 3, 0] }}
+      transition={hovered
+        ? { type: "spring", stiffness: 400, damping: 10 }
+        : { duration: 3.5, repeat: Infinity, ease: "easeInOut", delay }
+      }
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {emoji}
+    </motion.div>
+  )
+}
+
+function StatCounter({ value, label, color }) {
+  return (
+    <motion.div
+      variants={fadeUp}
+      className="text-center"
+    >
+      <div className={`text-4xl font-extrabold mb-1`} style={{ color }}>
+        {value}
+      </div>
+      <div className="text-sm font-medium text-muted-foreground">{label}</div>
+    </motion.div>
+  )
+}
+
+function FeatureCard({ icon, emoji, title, description, color, delay }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <motion.div
+      variants={fadeUp}
+      className="vibrant-card p-8 flex flex-col items-center text-center group cursor-default"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ animationDelay: `${delay}s` }}
+    >
+      <motion.div
+        className="text-5xl mb-5"
+        animate={hovered ? { scale: 1.35, rotate: 12 } : { y: [0, -10, 0], rotate: [0, 2, 0] }}
+        transition={hovered
+          ? { type: "spring", stiffness: 350, damping: 12 }
+          : { duration: 3, repeat: Infinity, ease: "easeInOut" }
+        }
+      >
+        {emoji}
+      </motion.div>
+      <div
+        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg mb-5"
+        style={{ background: color }}
+      >
+        {icon}
+      </div>
+      <h3 className="text-xl font-bold mb-3">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed text-sm">{description}</p>
+    </motion.div>
+  )
+}
+
+function TestimonialCard({ name, role, quote, initials, color, delay }) {
+  return (
+    <motion.div variants={fadeUp} className="vibrant-card p-7">
+      <div className="flex items-center gap-1 mb-4">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+        ))}
+      </div>
+      <p className="text-sm text-muted-foreground mb-5 italic leading-relaxed">"{quote}"</p>
+      <div className="flex items-center gap-3">
+        <div className="h-11 w-11 rounded-full flex items-center justify-center text-white font-bold text-sm"
+          style={{ background: color }}>
+          {initials}
+        </div>
+        <div>
+          <p className="text-sm font-bold">{name}</p>
+          <p className="text-xs text-muted-foreground">{role}</p>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+function FaqItem({ question, answer, delay }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <motion.div
+      variants={fadeUp}
+      className="vibrant-card p-6 cursor-pointer"
+      onClick={() => setOpen(!open)}
+    >
+      <div className="flex justify-between items-center gap-4">
+        <h3 className="text-base font-bold">{question}</h3>
+        <motion.div
+          animate={{ rotate: open ? 45 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="text-2xl text-primary shrink-0"
+        >
+          +
+        </motion.div>
+      </div>
+      <motion.div
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        initial={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        style={{ overflow: "hidden" }}
+      >
+        <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{answer}</p>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function SectionWrapper({ children, className = "" }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-80px" })
+  return (
+    <motion.div
+      ref={ref}
+      variants={stagger}
+      initial="hidden"
+      animate={inView ? "show" : "hidden"}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex min-h-screen flex-col" style={{ background: "#F4F4FF" }}>
+
+      {/* ── NAVBAR ── */}
+      <motion.header
+        initial={{ y: -70, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="sticky top-0 z-50 backdrop-blur-xl border-b"
+        style={{ background: "rgba(244,244,255,0.85)", borderColor: "#E5E6F3" }}
+      >
         <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold animate-fade-in">
-            <div className="relative">
-              <LayoutDashboard className="h-6 w-6 text-primary" />
-              <Sparkles className="h-3 w-3 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
+              style={{ background: "#6C3FFE" }}>
+              🤖
             </div>
-            <span className="text-gradient text-lg font-bold">AI Interview</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <Link
-              href="#features"
-              className="text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-foreground hover:scale-105"
-            >
-              Features
-            </Link>
-            <Link
-              href="#testimonials"
-              className="text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-foreground hover:scale-105"
-            >
-              Testimonials
-            </Link>
-            <Link
-              href="#faq"
-              className="text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-foreground hover:scale-105"
-            >
-              FAQ
-            </Link>
+            <span className="text-lg font-extrabold text-primary">InterviewAI</span>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-7">
+            {["Features", "Testimonials", "FAQ"].map(item => (
+              <Link key={item} href={`#${item.toLowerCase()}`}
+                className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-200">
+                {item}
+              </Link>
+            ))}
           </nav>
-          <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <Button variant="ghost" asChild className="hover-lift">
+
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" asChild className="font-semibold">
               <Link href="/login">Log in</Link>
             </Button>
-            <Button asChild className="btn-modern hover-glow">
-              <Link href="/dashboard">Get Started</Link>
+            <Button asChild className="btn-primary font-bold text-sm px-5 py-2 rounded-xl">
+              <Link href="/dashboard">Get Started →</Link>
             </Button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
-      <main className="flex-1">
-        <section className="py-20 md:py-28 relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-100/40 dark:bg-blue-900/20 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-100/40 dark:bg-purple-900/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-          </div>
-          
-          <div className="container flex flex-col items-center text-center relative z-10">
-            <div className="animate-slide-in-top">
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-                Practice Interviews with{" "}
-                <span className="text-gradient">
-                  AI
-                </span>
-              </h1>
-            </div>
-            <div className="animate-slide-in-bottom" style={{ animationDelay: '0.2s' }}>
-              <p className="mt-6 max-w-[42rem] text-lg text-muted-foreground sm:text-xl md:text-2xl">
-                Prepare for your next job interview with our AI-powered interview simulator. Get real-time feedback and
-                improve your skills with confidence.
-              </p>
-            </div>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row animate-scale-in" style={{ animationDelay: '0.4s' }}>
-              <Button size="lg" asChild className="btn-modern hover-glow text-lg px-8 py-6">
-                <Link href="/dashboard">
-                  Start Practicing
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="hover-lift text-lg px-8 py-6">
-                <Link href="#features">Learn More</Link>
-              </Button>
-            </div>
-            
-            {/* Stats */}
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl animate-fade-in" style={{ animationDelay: '0.6s' }}>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary">10K+</div>
-                <div className="text-sm text-muted-foreground">Interviews Completed</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary">95%</div>
-                <div className="text-sm text-muted-foreground">Success Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary">24/7</div>
-                <div className="text-sm text-muted-foreground">AI Available</div>
-              </div>
-            </div>
-          </div>
-        </section>
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden pt-24 pb-28">
+        {/* Background blobs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-20 animate-morph"
+            style={{ background: "#6C3FFE" }} />
+          <div className="absolute -bottom-32 -right-24 w-[420px] h-[420px] rounded-full opacity-15 animate-morph"
+            style={{ background: "#FF5E7D", animationDelay: "3s" }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full opacity-10"
+            style={{ background: "#00D4FF", filter: "blur(60px)" }} />
+        </div>
 
-        <section id="features" className="py-20 bg-slate-100 dark:bg-slate-800">
-          <div className="container">
-            <div className="mx-auto max-w-[58rem] text-center animate-fade-in">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-                Everything you need to{" "}
-                <span className="text-gradient">ace your next interview</span>
-              </h2>
-              <p className="mt-4 text-lg text-muted-foreground md:text-xl">Powerful features designed to boost your confidence and performance</p>
-            </div>
+        {/* Floating emojis */}
+        <FloatingEmoji emoji="🎯" className="top-16 left-[8%]" delay={0} />
+        <FloatingEmoji emoji="💡" className="top-24 right-[9%]" delay={0.8} />
+        <FloatingEmoji emoji="🚀" className="bottom-20 left-[12%]" delay={1.4} />
+        <FloatingEmoji emoji="⭐" className="bottom-16 right-[8%]" delay={0.4} />
 
-            <div className="mx-auto mt-16 grid max-w-5xl gap-8 md:grid-cols-3">
-              <div className="flex flex-col items-center text-center group animate-slide-in-left hover-lift p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <MessageSquare className="h-8 w-8" />
-                </div>
-                <h3 className="mt-6 text-xl font-semibold">Realistic Interviews</h3>
-                <p className="mt-3 text-muted-foreground">
-                  Practice with AI interviewers that simulate real-world scenarios and ask industry-specific questions with natural conversation flow.
-                </p>
-              </div>
+        <div className="container relative z-10 flex flex-col items-center text-center">
+          {/* Pill badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1, duration: 0.5, type: "spring" }}
+            className="mb-6 inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold bg-primary/10 border-primary/30 text-primary"
+          >
+            <Sparkles className="h-4 w-4" />
+            AI-Powered Mock Interviewer
+            <Sparkles className="h-4 w-4" />
+          </motion.div>
 
-              <div className="flex flex-col items-center text-center group animate-slide-in-top hover-lift p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700" style={{ animationDelay: '0.2s' }}>
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Star className="h-8 w-8" />
-                </div>
-                <h3 className="mt-6 text-xl font-semibold">Detailed Feedback</h3>
-                <p className="mt-3 text-muted-foreground">
-                  Get personalized feedback on your responses, communication skills, body language, and specific areas for improvement.
-                </p>
-              </div>
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-none mb-6"
+          >
+            Ace Your Next{" "}
+            <span className="text-primary block sm:inline">Interview 🎤</span>
+          </motion.h1>
 
-              <div className="flex flex-col items-center text-center group animate-slide-in-right hover-lift p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700" style={{ animationDelay: '0.4s' }}>
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <TrendingUp className="h-8 w-8" />
-                </div>
-                <h3 className="mt-6 text-xl font-semibold">Progress Tracking</h3>
-                <p className="mt-3 text-muted-foreground">
-                  Monitor your improvement over time with detailed analytics, performance metrics, and skill development insights.
-                </p>
-              </div>
-            </div>
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.6 }}
+            className="max-w-xl text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed"
+          >
+            Practice with an AI that speaks your industry's language. Get instant, personalized feedback and land the job you deserve.
+          </motion.p>
 
-            {/* Additional features */}
-            <div className="mx-auto mt-16 grid max-w-4xl gap-8 md:grid-cols-2">
-              <div className="flex items-start gap-4 group animate-fade-in" style={{ animationDelay: '0.6s' }}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Shield className="h-6 w-6" />
-                </div>
-                <div>
-                  <h4 className="text-lg font-semibold">Privacy First</h4>
-                  <p className="text-muted-foreground">Your interview data is encrypted and secure. We never share your information with third parties.</p>
-                </div>
-              </div>
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="flex flex-col sm:flex-row items-center gap-4 mb-16"
+          >
+            <Button size="lg" asChild className="btn-primary text-base px-8 py-6 rounded-2xl font-bold shadow-xl">
+              <Link href="/dashboard">
+                Start Practicing Free <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild
+              className="text-base px-8 py-6 rounded-2xl font-bold border-2 hover:border-primary transition-colors">
+              <Link href="#features">
+                <Play className="mr-2 h-4 w-4" />
+                See How It Works
+              </Link>
+            </Button>
+          </motion.div>
 
-              <div className="flex items-start gap-4 group animate-fade-in" style={{ animationDelay: '0.8s' }}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Zap className="h-6 w-6" />
-                </div>
-                <div>
-                  <h4 className="text-lg font-semibold">Instant Results</h4>
-                  <p className="text-muted-foreground">Get immediate feedback and analysis after each interview session to improve quickly.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+          {/* Stats row */}
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-3 gap-10 w-full max-w-md"
+          >
+            <StatCounter value="10K+" label="Interviews Done" color="#6C3FFE" />
+            <StatCounter value="95%" label="Success Rate" color="#FF5E7D" />
+            <StatCounter value="24/7" label="AI Available" color="#00C47A" />
+          </motion.div>
+        </div>
+      </section>
 
-        <section id="testimonials" className="py-20">
-          <div className="container">
-            <div className="mx-auto max-w-[58rem] text-center animate-fade-in">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-                Trusted by{" "}
-                <span className="text-gradient">thousands of professionals</span>
-              </h2>
-              <p className="mt-4 text-lg text-muted-foreground md:text-xl">See what our users have to say about their experience</p>
-            </div>
-
-            <div className="mx-auto mt-16 grid max-w-5xl gap-8 md:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-2xl border bg-card p-6 shadow-lg hover-lift animate-slide-in-left">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  "This platform helped me prepare for my technical interviews at top tech companies. The AI feedback
-                  was spot on and helped me identify areas I needed to work on."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                    AJ
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Alex Johnson</p>
-                    <p className="text-xs text-muted-foreground">Software Engineer at Google</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border bg-card p-6 shadow-lg hover-lift animate-slide-in-top" style={{ animationDelay: '0.2s' }}>
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  "I was nervous about behavioral interviews, but after practicing with this AI tool, I felt much more
-                  confident. I landed my dream job at a Fortune 500 company!"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-pink-600 flex items-center justify-center text-white font-semibold">
-                    SC
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Sarah Chen</p>
-                    <p className="text-xs text-muted-foreground">Product Manager at Microsoft</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border bg-card p-6 shadow-lg hover-lift animate-slide-in-right" style={{ animationDelay: '0.4s' }}>
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  "The detailed feedback and progress tracking helped me improve my interview skills significantly. I
-                  recommend this to anyone preparing for job interviews."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
-                    MR
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Michael Rodriguez</p>
-                    <p className="text-xs text-muted-foreground">Data Scientist at Amazon</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="faq" className="py-20 bg-slate-100 dark:bg-slate-800">
-          <div className="container">
-            <div className="mx-auto max-w-[58rem] text-center animate-fade-in">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-                Frequently Asked{" "}
-                <span className="text-gradient">Questions</span>
-              </h2>
-              <p className="mt-4 text-lg text-muted-foreground md:text-xl">Everything you need to know about our platform</p>
-            </div>
-
-            <div className="mx-auto mt-16 max-w-3xl space-y-6">
-              <div className="rounded-2xl border bg-card p-6 shadow-lg hover-lift animate-slide-in-left">
-                <h3 className="text-lg font-semibold mb-3">How does the AI interview work?</h3>
-                <p className="text-sm text-muted-foreground">
-                  Our AI uses advanced natural language processing to simulate realistic interview scenarios. It asks
-                  questions, analyzes your responses, and provides feedback based on industry standards and best
-                  practices.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border bg-card p-6 shadow-lg hover-lift animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
-                <h3 className="text-lg font-semibold mb-3">What types of interviews can I practice?</h3>
-                <p className="text-sm text-muted-foreground">
-                  We offer technical interviews for various programming languages and roles, behavioral interviews for
-                  soft skills assessment, and mixed interviews that combine both aspects.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border bg-card p-6 shadow-lg hover-lift animate-slide-in-left" style={{ animationDelay: '0.4s' }}>
-                <h3 className="text-lg font-semibold mb-3">Is my data secure?</h3>
-                <p className="text-sm text-muted-foreground">
-                  Yes, we take data privacy seriously. All your interview recordings and feedback are encrypted and
-                  stored securely. We never share your data with third parties without your consent.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border bg-card p-6 shadow-lg hover-lift animate-slide-in-right" style={{ animationDelay: '0.6s' }}>
-                <h3 className="text-lg font-semibold mb-3">Can I cancel my subscription anytime?</h3>
-                <p className="text-sm text-muted-foreground">
-                  Yes, you can cancel your subscription at any time. If you cancel, you'll continue to have access to
-                  your plan until the end of your billing period.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-20 bg-blue-600">
-          <div className="container text-center">
-            <div className="mx-auto max-w-3xl animate-fade-in">
-              <h2 className="text-3xl font-bold text-white sm:text-4xl md:text-5xl mb-6">
-                Ready to ace your next interview?
-              </h2>
-              <p className="text-xl text-blue-100 mb-8">
-                Join thousands of professionals who have improved their interview skills with AI
-              </p>
-              <Button size="lg" asChild className="bg-white text-blue-600 hover:bg-slate-50 text-lg px-8 py-6 btn-modern">
-                <Link href="/dashboard">
-                  Start Your Free Trial
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer className="border-t py-12 bg-background/95 backdrop-blur">
+      {/* ── FEATURES ── */}
+      <section id="features" className="py-24" style={{ background: "#FFFFFF" }}>
         <div className="container">
-          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <div className="flex items-center gap-2 font-semibold">
-              <LayoutDashboard className="h-5 w-5 text-primary" />
-              <span className="text-gradient font-bold">AI Interview</span>
+          <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
+            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
+              style={{ color: "#FF5E7D" }}>Features</motion.p>
+            <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+              Everything you need to{" "}
+              <span className="text-primary">crush interviews 💪</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-muted-foreground text-lg">
+              Powerful tools designed to build real confidence, fast.
+            </motion.p>
+          </SectionWrapper>
+
+          <SectionWrapper className="grid gap-7 md:grid-cols-3">
+            <FeatureCard
+              emoji="🗣️"
+              icon={<MessageSquare className="h-6 w-6" />}
+              title="Realistic Simulations"
+              description="AI interviewers that adapt in real-time — just like a real panel interview with industry-specific follow-ups."
+              color="#6C3FFE"
+              delay={0}
+            />
+            <FeatureCard
+              emoji="📊"
+              icon={<Star className="h-6 w-6" />}
+              title="Instant Smart Feedback"
+              description="Get detailed scores on clarity, confidence, and content within seconds of completing your session."
+              color="#FF5E7D"
+              delay={0.1}
+            />
+            <FeatureCard
+              emoji="📈"
+              icon={<TrendingUp className="h-6 w-6" />}
+              title="Progress Analytics"
+              description="Track your skill growth with visual dashboards and understand exactly where to focus next."
+              color="#00C47A"
+              delay={0.2}
+            />
+          </SectionWrapper>
+
+          {/* 2-column extra features */}
+          <SectionWrapper className="grid gap-6 md:grid-cols-2 mt-8 max-w-4xl mx-auto">
+            {[
+              { emoji: "🔒", color: "#6C3FFE", title: "Privacy First", desc: "All data is end-to-end encrypted. We never share your interviews with anyone." },
+              { emoji: "⚡", color: "#FF5E7D", title: "Instant Results", desc: "No waiting. Feedback arrives live as your interview session concludes." },
+            ].map(({ emoji, color, title, desc }) => (
+              <motion.div key={title} variants={fadeUp}
+                className="vibrant-card p-6 flex items-start gap-5">
+                <div className="text-4xl shrink-0 emoji-hover">{emoji}</div>
+                <div>
+                  <h4 className="text-base font-bold mb-1">{title}</h4>
+                  <p className="text-sm text-muted-foreground">{desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </SectionWrapper>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section id="testimonials" className="py-24" style={{ background: "#F4F4FF" }}>
+        <div className="container">
+          <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
+            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
+              style={{ color: "#6C3FFE" }}>Testimonials</motion.p>
+            <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+              Loved by thousands of{" "}
+              <span className="text-primary">job seekers 🙌</span>
+            </motion.h2>
+          </SectionWrapper>
+
+          <SectionWrapper className="grid gap-6 md:grid-cols-3">
+            <TestimonialCard
+              name="Alex Johnson" role="SWE @ Google"
+              initials="AJ" color="#6C3FFE"
+              quote="The AI feedback helped me pinpoint exactly what was holding me back. Landed my dream role after just 2 weeks of practice!"
+            />
+            <TestimonialCard
+              name="Sarah Chen" role="PM @ Microsoft"
+              initials="SC" color="#FF5E7D"
+              quote="I was terrified of behavioral rounds. After 10 sessions here, I walked into my interview feeling like a pro. 10/10 recommend."
+            />
+            <TestimonialCard
+              name="Michael Rodriguez" role="Data Scientist @ Amazon"
+              initials="MR" color="#00C47A"
+              quote="The detailed analytics showed me my improvement week by week. It's like having a personal career coach available at 2am!"
+            />
+          </SectionWrapper>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section id="faq" className="py-24" style={{ background: "#FFFFFF" }}>
+        <div className="container">
+          <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
+            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
+              style={{ color: "#FF5E7D" }}>FAQ</motion.p>
+            <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+              Got questions? <span className="text-primary">We've got answers 🤔</span>
+            </motion.h2>
+          </SectionWrapper>
+
+          <SectionWrapper className="mx-auto max-w-3xl space-y-4">
+            <FaqItem
+              question="How does the AI interviewer actually work?"
+              answer="Our AI uses advanced large language models to generate realistic, role-specific questions and analyzes your audio/text responses in real time, scoring you on communication clarity, confidence signals, and technical accuracy."
+            />
+            <FaqItem
+              question="What interview types are available?"
+              answer="Technical, Behavioral, Leadership, Case Study, System Design, Coding, and General interviews — all with adjustable difficulty from Beginner to Advanced."
+            />
+            <FaqItem
+              question="Is my data private and secure?"
+              answer="Absolutely. All interview data is encrypted with AES-256. We never sell or share your personal information or interview recordings with third parties."
+            />
+            <FaqItem
+              question="Can I cancel my subscription anytime?"
+              answer="Yes — no lock-in, ever. Cancel at any time from your dashboard and keep access until the end of your billing period."
+            />
+          </SectionWrapper>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 gradient-hero" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-8 left-[10%] text-5xl animate-float" style={{ animationDelay: "0s" }}>🎉</div>
+          <div className="absolute bottom-8 right-[10%] text-5xl animate-float" style={{ animationDelay: "1s" }}>🏆</div>
+        </div>
+        <div className="container relative z-10 text-center">
+          <SectionWrapper>
+            <motion.h2 variants={fadeUp}
+              className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
+              Ready to ace your next interview?
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-xl text-white/80 mb-10 max-w-xl mx-auto">
+              Join 10,000+ professionals sharpening their skills with AI today.
+            </motion.p>
+            <motion.div variants={fadeUp}>
+              <Button size="lg" asChild
+                className="bg-white text-primary font-bold text-lg px-10 py-7 rounded-2xl shadow-2xl hover:shadow-white/30 transition-all hover:-translate-y-1">
+                <Link href="/dashboard">
+                  Start Free Today <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </motion.div>
+          </SectionWrapper>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="border-t py-10" style={{ background: "#FFFFFF", borderColor: "#E5E6F3" }}>
+        <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base"
+              style={{ background: "#6C3FFE" }}>
+              🤖
             </div>
-            <nav className="flex gap-6">
-              <Link href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-                Features
+            <span className="font-extrabold text-primary">InterviewAI</span>
+          </Link>
+          <nav className="flex gap-6">
+            {["features", "testimonials", "faq"].map(s => (
+              <Link key={s} href={`#${s}`}
+                className="text-sm capitalize text-muted-foreground hover:text-primary transition-colors">
+                {s}
               </Link>
-              <Link href="#testimonials" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-                Testimonials
-              </Link>
-              <Link href="#faq" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-                FAQ
-              </Link>
-            </nav>
-            <div className="text-sm text-muted-foreground">
-              Made with ❤️ by <Link href="https://www.linkedin.com/in/lovishsinglaa/" target="_blank" className="text-blue-400">Lovish Singla and Shikhar Kanaujia</Link> 
-            </div>
-          </div>
+            ))}
+          </nav>
+          <p className="text-sm text-muted-foreground">
+            Made with ❤️ by{" "}
+            <a href="https://www.linkedin.com/in/lovishsinglaa/" target="_blank"
+              className="font-semibold text-primary hover:underline">
+              Lovish Singla & Shikhar Kanaujia
+            </a>
+          </p>
         </div>
       </footer>
     </div>
   )
 }
-
