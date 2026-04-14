@@ -329,7 +329,7 @@ export default function HomePage() {
               </Link>
             </nav>
             <div className="text-sm text-muted-foreground">
-              Made with ❤️ by <Link href="https://www.linkedin.com/in/lovishsinglaa/" target="_blank" className="text-blue-400">Lovish Singla</Link>
+              Made with ❤️ by <Link href="https://www.linkedin.com/in/lovishsinglaa/" target="_blank" className="text-blue-400">Lovish Singla and Shikhar Kanaujia</Link> 
             </div>
           </div>
         </div>

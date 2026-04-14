@@ -1,5 +1,28 @@
 import { chatSession } from '@/utils/GeminiAIModal';
 
+function normalizeDifficulty(selectedDifficulty) {
+    if (selectedDifficulty === 'beginner') return 'easy';
+    if (selectedDifficulty === 'intermediate') return 'medium';
+    return 'hard';
+}
+
+function normalizeQuestionCategory(category) {
+    const value = `${category || ''}`.toLowerCase();
+
+    if (value === 'technical') return 'technical';
+    if (value === 'behavioral') return 'behavioral';
+    if (value === 'leadership') return 'leadership';
+    if (value === 'problem-solving' || value === 'problem solving') return 'problem-solving';
+    if (value === 'communication') return 'communication';
+
+    // Interview-level categories that are not valid in question enum.
+    if (value === 'case-study' || value === 'system-design' || value === 'coding' || value === 'general') {
+        return 'technical';
+    }
+
+    return 'technical';
+}
+
 export async function POST(request) {
     try {
         const data = await request.json();
@@ -78,8 +101,8 @@ Return the response in this exact JSON format:
             feedback: '',
             rating: 0,
             timeSpent: 0,
-            category: selectedCategory,
-            difficulty: selectedDifficulty === 'beginner' ? 'easy' : selectedDifficulty === 'intermediate' ? 'medium' : 'hard',
+            category: normalizeQuestionCategory(q.category || selectedCategory),
+            difficulty: normalizeDifficulty(selectedDifficulty),
             hints: [],
             keywords: [],
             expectedDuration: 180

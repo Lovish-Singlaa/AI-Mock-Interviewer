@@ -79,7 +79,7 @@ const interviewSchema = new mongoose.Schema({
         category: {
             type: String,
             enum: ['technical', 'behavioral', 'leadership', 'problem-solving', 'communication'],
-            default: 'general'
+            default: 'technical'
         },
         difficulty: {
             type: String,

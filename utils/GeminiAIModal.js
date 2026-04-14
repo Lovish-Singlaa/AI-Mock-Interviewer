@@ -9,9 +9,9 @@ const apiKey = process.env.GEMINI_API_KEY;
   
 // Multiple models for different use cases
 const models = {
-    standard: genAI.getGenerativeModel({ model: "gemini-2.0-flash" }),
-    advanced: genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" }),
-    creative: genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+    standard: genAI.getGenerativeModel({ model: "gemini-2.5-flash" }),
+    advanced: genAI.getGenerativeModel({ model: "gemini-2.5-flash-exp" }),
+    creative: genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 };
   
   const generationConfig = {
