@@ -23,6 +23,7 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { UserContext } from "../context/UserContext"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname()
@@ -80,6 +81,16 @@ const navItems = [
 ]
 
 function DashboardSidebar({ pathname, user }) {
+  const handleLogout = async () => {
+    try {
+      await axios.post('/api/auth/logout');
+      toast.success('Logged out successfully!');
+      window.location.href = '/login';
+    } catch (error) {
+      toast.error('Failed to logout. Please try again.');
+    }
+  };
+
   return (
     <Sidebar className="border-r" style={{ background: "#FFFFFF", borderColor: "#E5E6F3" }}>
       {/* Logo */}
@@ -163,7 +174,7 @@ function DashboardSidebar({ pathname, user }) {
             <span className="text-sm font-bold truncate">{user?.name || "User"}</span>
             <span className="text-xs text-muted-foreground truncate">{user?.email || ""}</span>
           </div>
-          <Button variant="ghost" size="icon" className="ml-auto shrink-0 hover:bg-red-50 hover:text-red-500 rounded-xl transition-colors">
+          <Button variant="ghost" size="icon" className="ml-auto shrink-0 hover:bg-red-50 hover:text-red-500 rounded-xl transition-colors" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
           </Button>
         </motion.div>

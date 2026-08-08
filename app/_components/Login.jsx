@@ -28,7 +28,7 @@ const Login = () => {
         const response = await axios.post('/api/auth/login',{ email, password })
         if(response.status==201){
           toast.success("Login Successful! 🎉");
-          router.push('/dashboard')
+          window.location.href = '/dashboard';
         }
       } catch (error) {
         toast.error(error.message)
