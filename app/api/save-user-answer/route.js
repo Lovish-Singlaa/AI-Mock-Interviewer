@@ -1,7 +1,9 @@
 import Interview from '@/models/interviewSchema';
 import User from '@/models/userSchema';
+import Document from '@/models/documentSchema';
 import dbConnect from '@/utils/db';
 import { chatSession } from '@/utils/GeminiAIModal';
+import { buildRAGContext } from '@/utils/embeddings';
 
 export async function POST(request){
     try {
@@ -102,6 +104,21 @@ export async function PUT(request) {
         }
 
         const question = interview.questions[questionIndex];
+
+        // ── RAG: Retrieve resume context for evaluation ──
+        let resumeContext = '';
+        try {
+            const userDoc = await Document.findOne({ userId: interview.userId, documentType: 'resume' });
+            if (userDoc && userDoc.chunks && userDoc.chunks.length > 0) {
+                const query = `${question.question} ${interview.jobRole} ${interview.experience} years`;
+                const context = await buildRAGContext(query, userDoc.chunks, 3);
+                if (context) {
+                    resumeContext = `\n\nCANDIDATE RESUME CONTEXT (use to verify consistency):\n---\n${context}\n---`;
+                }
+            }
+        } catch (ragError) {
+            console.error('RAG retrieval for evaluation failed (continuing without):', ragError);
+        }
         
         // Use original chatSession for evaluation
         const evaluationPrompt = `You are an expert interview evaluator. Analyze the following interview response and provide detailed feedback.
@@ -109,7 +126,7 @@ export async function PUT(request) {
 Question: ${question.question}
 User's Answer: ${userResponse}
 Job Role: ${interview.jobRole}
-Experience Level: ${interview.experience} years
+Experience Level: ${interview.experience} years${resumeContext}
 
 Evaluation Criteria:
 1. Technical Accuracy (if applicable)
@@ -117,7 +134,7 @@ Evaluation Criteria:
 3. Problem-Solving Approach
 4. Confidence and Presentation
 5. Relevance to the Question
-6. Completeness of Response
+6. Completeness of Response${resumeContext ? '\n7. Consistency with Resume — check if the answer aligns with or contradicts the candidate\'s stated experience' : ''}
 
 Provide feedback in this JSON format:
 {
