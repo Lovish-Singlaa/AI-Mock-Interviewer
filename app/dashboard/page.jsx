@@ -196,6 +196,8 @@ const page = () => {
     const [interviews, setInterviews] = useState(null)
     const [fetching, setFetching] = useState(false)
     const [analytics, setAnalytics] = useState(null)
+    const [useResume, setUseResume] = useState(false)
+    const [hasResume, setHasResume] = useState(false)
 
     const router = useRouter()
 
@@ -205,6 +207,18 @@ const page = () => {
             setUser(response.data.user)
         }
         getUser()
+
+        // Check if user has a resume uploaded
+        const checkResume = async () => {
+            try {
+                const res = await axios.get('/api/documents')
+                if (res.data.success && res.data.documents.length > 0) {
+                    setHasResume(true)
+                    setUseResume(true) // Default ON if resume exists
+                }
+            } catch { /* ignore */ }
+        }
+        checkResume()
     }, [])
 
     useEffect(() => {
@@ -248,7 +262,8 @@ const page = () => {
         setLoading(true)
         try {
             const qRes = await axios.post('/api/generate-questions', {
-                jobRole, jobDesc, jobExp, selectedCategory, selectedDifficulty, questionCount
+                jobRole, jobDesc, jobExp, selectedCategory, selectedDifficulty, questionCount,
+                userId: user?._id, useResume: useResume && hasResume
             })
             if (!qRes.data.success) throw new Error(qRes.data.message || 'Failed to generate')
             const response = await axios.post('/api/interviews', {
@@ -404,7 +419,7 @@ const page = () => {
                             style={{ background: "#FFFFFF", border: "1.5px solid #E5E6F3" }}>
                             {/* Rainbow top strip */}
                             <div className="h-1.5 w-full" style={{ background: "#6C3FFE" }} />
-                            <div className="p-6 md:p-8">
+                            <div className="p-6 md:p-8 max-h-[85vh] overflow-y-auto">
                                 <DialogHeader className="mb-6">
                                     <div className="flex items-center gap-3 mb-1">
                                         <span className="text-3xl">🎯</span>
@@ -445,7 +460,7 @@ const page = () => {
                                             id="jobDesc" value={jobDesc}
                                             onChange={(e) => setJobDesc(e.target.value)}
                                             placeholder="Brief description of the role and responsibilities..."
-                                            className="min-h-[80px] rounded-xl border-2 focus:border-primary" required
+                                            className="min-h-[80px] max-h-[120px] rounded-xl border-2 focus:border-primary" required
                                         />
                                     </div>
 
@@ -495,6 +510,40 @@ const page = () => {
                                             </Select>
                                         </div>
                                     </div>
+
+                                    {/* Resume toggle */}
+                                    {hasResume && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            className="rounded-2xl p-4 flex items-center justify-between"
+                                            style={{
+                                                background: useResume ? '#EEE5FF' : '#F4F4FF',
+                                                border: useResume ? '1.5px solid #6C3FFE30' : '1.5px solid #E5E6F3',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <span className="text-xl">📄</span>
+                                                <div>
+                                                    <p className="text-sm font-bold">Use resume for personalized questions</p>
+                                                    <p className="text-xs text-muted-foreground">AI will reference your experience, projects & skills</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setUseResume(!useResume)}
+                                                className="relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0"
+                                                style={{ background: useResume ? '#6C3FFE' : '#D1D5DB' }}
+                                            >
+                                                <motion.div
+                                                    className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm"
+                                                    animate={{ left: useResume ? '22px' : '2px' }}
+                                                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                                />
+                                            </button>
+                                        </motion.div>
+                                    )}
 
                                     <div className="flex justify-end gap-3 pt-2">
                                         <Button type="button" variant="outline" onClick={() => setOpenDialog(false)}

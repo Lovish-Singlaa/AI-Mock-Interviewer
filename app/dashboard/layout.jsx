@@ -78,6 +78,7 @@ export default function DashboardLayout({ children }) {
 const navItems = [
   { href: "/dashboard", icon: "🏠", lucide: <Home className="h-4 w-4" />, label: "Overview" },
   { href: "/dashboard/interviews", icon: "🎯", lucide: <BarChart3 className="h-4 w-4" />, label: "My Interviews" },
+  { href: "/dashboard/resume", icon: "📄", lucide: <BarChart3 className="h-4 w-4" />, label: "My Resume" },
 ]
 
 function DashboardSidebar({ pathname, user }) {

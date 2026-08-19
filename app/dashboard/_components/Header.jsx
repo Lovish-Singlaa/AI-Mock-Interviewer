@@ -10,11 +10,23 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { LogOutIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 const Header = () => {
     const [user, setUser] = useState(null)
     const path = usePathname();
     const router = useRouter();
+
+    const handleLogout = async () => {
+        try {
+            await axios.post('/api/auth/logout');
+            toast.success('Logged out successfully!');
+            window.location.href = '/login';
+        } catch (error) {
+            toast.error('Failed to logout. Please try again.');
+        }
+    };
+
     useEffect(() => {
         const getUser = async () => {
             try {
@@ -44,7 +56,7 @@ const Header = () => {
                             <PopoverTrigger>{user.name}</PopoverTrigger>
                             <PopoverContent>
                                 <div className='flex items-center'>
-                                    <LogOutIcon/><Button variant="ghost">Logout</Button>
+                                    <LogOutIcon/><Button variant="ghost" onClick={handleLogout}>Logout</Button>
                                 </div>
                             </PopoverContent>
                         </Popover>
