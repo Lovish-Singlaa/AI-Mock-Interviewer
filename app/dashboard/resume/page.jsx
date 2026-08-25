@@ -155,7 +155,7 @@ export default function ResumePage() {
                     onClick={() => !uploading && fileInputRef.current?.click()}
                     className="rounded-3xl p-10 text-center cursor-pointer transition-all duration-300"
                     style={{
-                        background: dragOver ? '#EEE5FF' : '#FFFFFF',
+                        background: dragOver ? 'var(--secondary)' : 'var(--card)',
                         border: dragOver ? `2.5px dashed ${BRAND.violet}` : '2px dashed #E5E6F3',
                         boxShadow: dragOver ? `0 4px 24px ${BRAND.violet}20` : '0 1px 4px rgba(0,0,0,0.05)'
                     }}
@@ -210,8 +210,7 @@ export default function ResumePage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="mt-6 rounded-3xl overflow-hidden shadow-lg"
-                            style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}
+                            className="mt-6 rounded-3xl overflow-hidden shadow-lg bg-card border-[1.5px] border-border"
                         >
                             <div className="h-1.5 w-full" style={{ background: BRAND.green }} />
                             <div className="p-6">
@@ -242,8 +241,7 @@ export default function ResumePage() {
                                 </div>
 
                                 {/* Resume text preview */}
-                                <div className="rounded-2xl p-4 max-h-80 overflow-y-auto"
-                                    style={{ background: '#F4F4FF', border: '1.5px solid #E5E6F3' }}>
+                                <div className="rounded-2xl p-4 max-h-80 overflow-y-auto bg-secondary border-[1.5px] border-border">
                                     <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
                                         Extracted Content Preview
                                     </p>
@@ -267,8 +265,7 @@ export default function ResumePage() {
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="mt-6 rounded-3xl p-8 text-center"
-                        style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}
+                        className="mt-6 rounded-3xl p-8 text-center bg-card border-[1.5px] border-border"
                     >
                         <div className="text-5xl mb-3">📋</div>
                         <p className="font-bold text-sm mb-1">No resume uploaded yet</p>

@@ -46,7 +46,7 @@ const MarkdownContent = ({ content }) => {
                     </blockquote>
                 ),
                 code: ({ children }) => (
-                    <code className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: '#EEE5FF', color: BRAND.violet }}>
+                    <code className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: BRAND.violet + '1A', color: BRAND.violet }}>
                         {children}
                     </code>
                 ),
@@ -67,7 +67,7 @@ function ScoreRing({ score, max = 5, size = 90 }) {
     return (
         <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
             <svg width={size} height={size} className="absolute -rotate-90">
-                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E5E6F3" strokeWidth={8} />
+                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border)" strokeWidth={8} />
                 <motion.circle
                     cx={size / 2} cy={size / 2} r={r} fill="none"
                     stroke={color} strokeWidth={8}
@@ -91,7 +91,7 @@ function QuestionCard({ question, index, total }) {
     const [open, setOpen] = useState(false)
     const score = question.rating || 0
     const scoreColor = score >= 4 ? BRAND.green : score >= 3 ? BRAND.amber : BRAND.pink
-    const scoreBg = score >= 4 ? '#E6FFF5' : score >= 3 ? '#FFF8E6' : '#FFF0F3'
+    const scoreBg = score >= 4 ? BRAND.green + '1A' : score >= 3 ? BRAND.amber + '1A' : BRAND.pink + '1A'
 
     return (
         <motion.div variants={fadeUp}>
@@ -101,8 +101,8 @@ function QuestionCard({ question, index, total }) {
                         whileHover={{ scale: 1.005 }}
                         className="w-full text-left rounded-2xl p-5 cursor-pointer transition-all"
                         style={{
-                            background: open ? '#FAFAFA' : '#FFFFFF',
-                            border: open ? `2px solid ${BRAND.violet}30` : '1.5px solid #E5E6F3',
+                        background: open ? 'var(--secondary)' : 'var(--card)',
+                            border: open ? `2px solid ${BRAND.violet}30` : '1.5px solid var(--border)',
                             boxShadow: open ? `0 4px 24px ${BRAND.violet}12` : '0 1px 4px rgba(0,0,0,0.05)'
                         }}
                     >
@@ -159,7 +159,7 @@ function QuestionCard({ question, index, total }) {
                                     {/* Your answer */}
                                     {question.userResponse && (
                                         <div className="rounded-2xl p-5"
-                                            style={{ background: '#FFF0F3', border: `1.5px solid ${BRAND.pink}25` }}>
+                                            style={{ background: BRAND.pink + '1A', border: `1.5px solid ${BRAND.pink}25` }}>
                                             <div className="flex items-center gap-2 mb-3">
                                                 <MessageSquare className="h-4 w-4" style={{ color: BRAND.pink }} />
                                                 <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: BRAND.pink }}>
@@ -175,7 +175,7 @@ function QuestionCard({ question, index, total }) {
                                     {/* Ideal answer */}
                                     {question.answer && (
                                         <div className="rounded-2xl p-5"
-                                            style={{ background: '#E6FFF5', border: `1.5px solid ${BRAND.green}25` }}>
+                                            style={{ background: BRAND.green + '1A', border: `1.5px solid ${BRAND.green}25` }}>
                                             <div className="flex items-center gap-2 mb-3">
                                                 <CheckCircle className="h-4 w-4" style={{ color: BRAND.green }} />
                                                 <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: BRAND.green }}>
@@ -191,7 +191,7 @@ function QuestionCard({ question, index, total }) {
                                     {/* AI feedback */}
                                     {question.feedback && (
                                         <div className="rounded-2xl p-5"
-                                            style={{ background: '#EEE5FF', border: `1.5px solid ${BRAND.violet}25` }}>
+                                            style={{ background: BRAND.violet + '1A', border: `1.5px solid ${BRAND.violet}25` }}>
                                             <div className="flex items-center gap-2 mb-3">
                                                 <Brain className="h-4 w-4" style={{ color: BRAND.violet }} />
                                                 <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: BRAND.violet }}>
@@ -235,7 +235,7 @@ const page = () => {
     const questions = interview?.questions || []
     const answered = questions.filter(q => q.userResponse && q.userResponse.length > 0).length
     const scoreColor = score >= 4 ? BRAND.green : score >= 3 ? BRAND.amber : BRAND.pink
-    const scoreBg = score >= 4 ? '#E6FFF5' : score >= 3 ? '#FFF8E6' : '#FFF0F3'
+    const scoreBg = score >= 4 ? BRAND.green + '1A' : score >= 3 ? BRAND.amber + '1A' : BRAND.pink + '1A'
 
     function formatDate(dateString) {
         if (!dateString) return "—"
@@ -246,7 +246,7 @@ const page = () => {
     }
 
     return (
-        <div className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto" style={{ background: '#F4F4FF' }}>
+        <div className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto bg-background">
 
             {/* ── HEADER ── */}
             <motion.div
@@ -276,7 +276,7 @@ const page = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5 }}
                     className="rounded-3xl p-6 md:p-8 mb-6 shadow-lg"
-                    style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}
+                    style={{ background: 'var(--card)', border: '1.5px solid var(--border)' }}
                 >
                     <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                         {/* Score ring */}
@@ -295,10 +295,10 @@ const page = () => {
                             {/* Stat grid */}
                             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                                 {[
-                                    { emoji: '📋', label: 'Questions', value: questions.length, color: BRAND.violet, bg: '#EEE5FF' },
-                                    { emoji: '✅', label: 'Answered', value: answered, color: BRAND.green, bg: '#E6FFF5' },
-                                    { emoji: '⭐', label: 'Score', value: `${score}/5`, color: BRAND.amber, bg: '#FFF8E6' },
-                                    { emoji: '⏱️', label: 'Est. Time', value: `${questions.length * 5}m`, color: BRAND.pink, bg: '#FFF0F3' },
+                                    { emoji: '📋', label: 'Questions', value: questions.length, color: BRAND.violet, bg: BRAND.violet + '1A' },
+                                    { emoji: '✅', label: 'Answered', value: answered, color: BRAND.green, bg: BRAND.green + '1A' },
+                                    { emoji: '⭐', label: 'Score', value: `${score}/5`, color: BRAND.amber, bg: BRAND.amber + '1A' },
+                                    { emoji: '⏱️', label: 'Est. Time', value: `${questions.length * 5}m`, color: BRAND.pink, bg: BRAND.pink + '1A' },
                                 ].map(({ emoji, label, value, color, bg }) => (
                                     <div key={label} className="rounded-2xl p-3 text-center" style={{ background: bg }}>
                                         <div className="text-xl mb-0.5">{emoji}</div>
@@ -311,12 +311,12 @@ const page = () => {
                     </div>
 
                     {/* Star bar */}
-                    <div className="mt-6 pt-5" style={{ borderTop: '1.5px solid #E5E6F3' }}>
+                    <div className="mt-6 pt-5" style={{ borderTop: '1.5px solid var(--border)' }}>
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Score Breakdown</span>
                             <span className="text-xs font-bold" style={{ color: scoreColor }}>{Math.round((score / 5) * 100)}%</span>
                         </div>
-                        <div className="h-3 rounded-full overflow-hidden" style={{ background: '#E5E6F3' }}>
+                        <div className="h-3 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
                             <motion.div
                                 className="h-full rounded-full"
                                 style={{ background: scoreColor }}
@@ -334,8 +334,7 @@ const page = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="flex gap-2 mb-6 p-1.5 rounded-2xl"
-                style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3', width: 'fit-content' }}
+                className="rounded-3xl overflow-hidden shadow-lg mx-auto bg-card border-[1.5px] border-border w-fit flex gap-2 mb-6 p-1.5"
             >
                 {[
                     { id: 'questions', icon: <MessageSquare className="h-4 w-4" />, label: 'Q&A Review' },
@@ -349,7 +348,7 @@ const page = () => {
                         className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all"
                         style={{
                             background: activeTab === tab.id ? BRAND.violet : 'transparent',
-                            color: activeTab === tab.id ? '#fff' : '#6B7280'
+                            color: activeTab === tab.id ? '#fff' : 'var(--muted-foreground)'
                         }}
                     >
                         {tab.icon} {tab.label}
@@ -371,7 +370,7 @@ const page = () => {
                         {/* Expand tip */}
                         <motion.div variants={fadeUp}
                             className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold"
-                            style={{ background: '#EEE5FF', color: BRAND.violet }}>
+                            style={{ background: BRAND.violet + '1A', color: BRAND.violet }}>
                             <Zap className="h-4 w-4" />
                             Click any question to expand your answer, the ideal answer, and AI feedback.
                         </motion.div>
@@ -381,8 +380,7 @@ const page = () => {
                                 <QuestionCard key={i} question={q} index={i} total={questions.length} />
                             ))
                         ) : (
-                            <motion.div variants={fadeUp} className="text-center py-16 rounded-3xl"
-                                style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}>
+                            <motion.div variants={fadeUp} className="text-center py-16 rounded-3xl bg-card border-[1.5px] border-border">
                                 <div className="text-6xl mb-4">🤔</div>
                                 <h3 className="font-extrabold text-lg mb-1">No questions yet</h3>
                                 <p className="text-muted-foreground text-sm">Complete the interview session first.</p>
@@ -397,32 +395,31 @@ const page = () => {
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="rounded-3xl p-6 shadow-lg"
-                        style={{ background: '#FFFFFF', border: '1.5px solid #E5E6F3' }}
+                        className="w-full rounded-3xl p-6 shadow-lg bg-card border-[1.5px] border-border"
                     >
                         <h2 className="text-lg font-extrabold mb-5 text-primary">Session Details</h2>
                         <div className="space-y-3">
                             {[
-                                { icon: <Target className="h-4 w-4" />, label: 'Job Role', value: interview?.jobRole, color: BRAND.violet, bg: '#EEE5FF' },
-                                { icon: <TrendingUp className="h-4 w-4" />, label: 'Experience', value: `${interview?.experience} years`, color: BRAND.green, bg: '#E6FFF5' },
-                                { icon: <Sparkles className="h-4 w-4" />, label: 'Category', value: interview?.category || 'General', color: BRAND.cyan, bg: '#E6FAFF' },
-                                { icon: <Clock className="h-4 w-4" />, label: 'Duration', value: `~${questions.length * 5} minutes`, color: BRAND.amber, bg: '#FFF8E6' },
-                                { icon: <Calendar className="h-4 w-4" />, label: 'Date', value: formatDate(interview?.createdAt), color: BRAND.pink, bg: '#FFF0F3' },
+                                { icon: <Target className="h-4 w-4" />, label: 'Job Role', value: interview?.jobRole, color: BRAND.violet, bg: BRAND.violet + '1A' },
+                                { icon: <TrendingUp className="h-4 w-4" />, label: 'Experience', value: `${interview?.experience} years`, color: BRAND.green, bg: BRAND.green + '1A' },
+                                { icon: <Sparkles className="h-4 w-4" />, label: 'Category', value: interview?.category || 'General', color: BRAND.cyan, bg: BRAND.cyan + '1A' },
+                                { icon: <Clock className="h-4 w-4" />, label: 'Duration', value: `~${questions.length * 5} minutes`, color: BRAND.amber, bg: BRAND.amber + '1A' },
+                                { icon: <Calendar className="h-4 w-4" />, label: 'Date', value: formatDate(interview?.createdAt), color: BRAND.pink, bg: BRAND.pink + '1A' },
                             ].map(({ icon, label, value, color, bg }) => (
                                 <div key={label} className="flex items-center justify-between p-4 rounded-2xl" style={{ background: bg }}>
                                     <div className="flex items-center gap-2.5" style={{ color }}>
                                         {icon}
                                         <span className="text-sm font-bold">{label}</span>
                                     </div>
-                                    <span className="text-sm font-semibold text-gray-700">{value || '—'}</span>
+                                    <span className="text-sm font-semibold text-foreground">{value || '—'}</span>
                                 </div>
                             ))}
                         </div>
 
                         {interview?.jobDescription && (
-                            <div className="mt-5 p-4 rounded-2xl" style={{ background: '#F4F4FF', border: '1.5px solid #E5E6F3' }}>
+                            <div className="mt-5 p-4 rounded-2xl bg-secondary border-[1.5px] border-border">
                                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Job Description</p>
-                                <p className="text-sm text-gray-600 leading-relaxed">{interview.jobDescription}</p>
+                                <p className="text-sm text-muted-foreground leading-relaxed">{interview.jobDescription}</p>
                             </div>
                         )}
                     </motion.div>

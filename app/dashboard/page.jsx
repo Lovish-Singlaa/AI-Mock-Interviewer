@@ -415,8 +415,7 @@ const page = () => {
             <AnimatePresence>
                 {openDialog && (
                     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                        <DialogContent className="sm:max-w-2xl rounded-3xl overflow-hidden p-0"
-                            style={{ background: "#FFFFFF", border: "1.5px solid #E5E6F3" }}>
+                        <DialogContent className="sm:max-w-2xl rounded-3xl overflow-hidden p-0 bg-card border-border">
                             {/* Rainbow top strip */}
                             <div className="h-1.5 w-full" style={{ background: "#6C3FFE" }} />
                             <div className="p-6 md:p-8 max-h-[85vh] overflow-y-auto">

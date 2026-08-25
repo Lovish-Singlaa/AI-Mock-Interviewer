@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/popover"
 import { LogOutIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const Header = () => {
     const [user, setUser] = useState(null)
@@ -40,7 +41,7 @@ const Header = () => {
     }, [path])
     return (
         <div>
-            <div className='w-full flex justify-between items-center p-4 bg-gray-100'>
+            <div className='w-full flex justify-between items-center p-4 bg-card shadow-sm border-b'>
                 <Image src="/logo.svg" alt="Logo" width={100} height={100} />
                 <div>
                     <ul className='hidden md:flex list-none gap-4 font-semibold'>
@@ -50,7 +51,8 @@ const Header = () => {
                         <li className={`${(path == '/dashboard/how') ? "text-purple-500" : ""} cursor-pointer`}>How It Works?</li>
                     </ul>
                 </div>
-                <div>
+                <div className='flex items-center gap-4'>
+                    <ThemeToggle />
                     {user ? <div>
                         <Popover>
                             <PopoverTrigger>{user.name}</PopoverTrigger>

@@ -184,9 +184,10 @@
    CARD STYLES
    ============================== */
 .vibrant-card {
-  background: #FFFFFF;
+  background: var(--card);
+  color: var(--card-foreground);
   border-radius: 20px;
-  border: 1.5px solid #E5E6F3;
+  border: 1.5px solid var(--border);
   box-shadow: 0 4px 24px rgba(108, 63, 254, 0.06);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -419,9 +420,10 @@
    STAT CARDS
    ============================== */
 .stat-card {
-  background: #FFFFFF;
+  background: var(--card);
+  color: var(--card-foreground);
   border-radius: 20px;
-  border: 1.5px solid #E5E6F3;
+  border: 1.5px solid var(--border);
   box-shadow: 0 4px 20px rgba(108, 63, 254, 0.06);
   transition: all 0.3s ease;
   position: relative;
@@ -462,8 +464,8 @@
    SIDEBAR OVERRIDES
    ============================== */
 [data-sidebar] {
-  background: #FFFFFF !important;
-  border-right: 1.5px solid #E5E6F3 !important;
+  background: var(--card) !important;
+  border-right: 1.5px solid var(--border) !important;
 }
 
 /* ==============================

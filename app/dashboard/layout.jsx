@@ -24,6 +24,7 @@ import axios from "axios"
 import { UserContext } from "../context/UserContext"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
+import { ThemeToggle } from "@/components/ThemeToggle"
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname()
@@ -39,7 +40,7 @@ export default function DashboardLayout({ children }) {
   return (
     <UserContext.Provider value={{ user, setUser }}>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full" style={{ background: "#F4F4FF" }}>
+        <div className="flex min-h-screen w-full bg-background">
           {pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/interviews/") && (
             <div className="hidden md:block">
               <DashboardSidebar pathname={pathname} user={user} />
@@ -47,8 +48,7 @@ export default function DashboardLayout({ children }) {
           )}
           <main className="flex-1 w-full max-w-full overflow-x-hidden">
             {/* Mobile topbar */}
-            <div className="flex items-center justify-between p-4 md:hidden sticky top-0 z-30 border-b"
-              style={{ background: "rgba(244,244,255,0.9)", backdropFilter: "blur(12px)", borderColor: "#E5E6F3" }}>
+            <div className="flex items-center justify-between p-4 md:hidden sticky top-0 z-30 border-b bg-background/90 backdrop-blur-md border-border">
               <Link href="/dashboard" className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
                   style={{ background: "#6C3FFE" }}>
@@ -62,6 +62,9 @@ export default function DashboardLayout({ children }) {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
+                <div className="mr-2 ml-auto">
+                    <ThemeToggle />
+                </div>
                 <SheetContent side="left" className="p-0">
                   <DashboardSidebar pathname={pathname} user={user} />
                 </SheetContent>
@@ -93,10 +96,11 @@ function DashboardSidebar({ pathname, user }) {
   };
 
   return (
-    <Sidebar className="border-r" style={{ background: "#FFFFFF", borderColor: "#E5E6F3" }}>
+    <Sidebar className="border-r bg-card border-border">
       {/* Logo */}
-      <SidebarHeader className="border-b" style={{ borderColor: "#E5E6F3" }}>
-        <Link href="/dashboard" className="flex items-center gap-2.5 px-3 py-4">
+      <SidebarHeader className="border-b border-border">
+        <Link href="/dashboard" className="flex items-center justify-between w-full px-3 py-4">
+          <div className="flex items-center gap-2.5">
           <motion.div
             whileHover={{ rotate: 20, scale: 1.15 }}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-xl"
@@ -105,7 +109,11 @@ function DashboardSidebar({ pathname, user }) {
             🤖
           </motion.div>
           <span className="font-extrabold text-primary text-xl">InterviewAI</span>
+          </div>
         </Link>
+        <div className="absolute right-4 top-5 hidden md:block">
+            <ThemeToggle />
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -148,8 +156,7 @@ function DashboardSidebar({ pathname, user }) {
         </SidebarGroup>
 
         {/* Quick tip */}
-        <div className="mx-3 mt-4 p-4 rounded-2xl"
-          style={{ background: "#EEE5FF", border: "1.5px solid #6C3FFE20" }}>
+        <div className="mx-3 mt-4 p-4 rounded-2xl bg-secondary/50 border-[1.5px] border-primary/20">
           <div className="text-2xl mb-2">💡</div>
           <p className="text-xs font-bold text-primary mb-1">Pro Tip</p>
           <p className="text-xs text-muted-foreground">
@@ -159,10 +166,9 @@ function DashboardSidebar({ pathname, user }) {
       </SidebarContent>
 
       {/* User footer */}
-      <SidebarFooter className="border-t p-4" style={{ borderColor: "#E5E6F3" }}>
+      <SidebarFooter className="border-t border-border p-4">
         <motion.div
-          className="flex items-center gap-3 p-3 rounded-2xl"
-          style={{ background: "#F4F4FF", border: "1.5px solid #E5E6F3" }}
+          className="flex items-center gap-3 p-3 rounded-2xl bg-muted border-[1.5px] border-border"
           whileHover={{ scale: 1.02 }}
         >
           <Avatar className="h-9 w-9 ring-2" style={{ "--tw-ring-color": "#6C3FFE" }}>
