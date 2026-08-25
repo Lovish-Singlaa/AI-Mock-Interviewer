@@ -64,6 +64,11 @@ const interviewSchema = new mongoose.Schema({
             type: String,
             default: ''
         },
+        inputMode: {
+            type: String,
+            enum: ['text', 'voice'],
+            default: 'text'
+        },
         feedback: {
             type: String,
             default: ''
