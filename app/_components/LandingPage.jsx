@@ -166,7 +166,7 @@ export default function HomePage() {
         className="sticky top-0 z-50 backdrop-blur-xl border-b"
         style={{ background: "rgba(244,244,255,0.85)", borderColor: "#E5E6F3" }}
       >
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container mx-auto px-4 flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
               style={{ background: "#6C3FFE" }}>
@@ -213,7 +213,7 @@ export default function HomePage() {
         <FloatingEmoji emoji="🚀" className="bottom-20 left-[12%]" delay={1.4} />
         <FloatingEmoji emoji="⭐" className="bottom-16 right-[8%]" delay={0.4} />
 
-        <div className="container relative z-10 flex flex-col items-center text-center">
+        <div className="container mx-auto px-4 relative z-10 flex flex-col items-center text-center">
           {/* Pill badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -284,7 +284,7 @@ export default function HomePage() {
 
       {/* ── FEATURES ── */}
       <section id="features" className="py-24" style={{ background: "#FFFFFF" }}>
-        <div className="container">
+        <div className="container mx-auto px-4">
           <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
             <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
               style={{ color: "#FF5E7D" }}>Features</motion.p>
@@ -345,7 +345,7 @@ export default function HomePage() {
 
       {/* ── TESTIMONIALS ── */}
       <section id="testimonials" className="py-24" style={{ background: "#F4F4FF" }}>
-        <div className="container">
+        <div className="container mx-auto px-4">
           <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
             <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
               style={{ color: "#6C3FFE" }}>Testimonials</motion.p>
@@ -377,7 +377,7 @@ export default function HomePage() {
 
       {/* ── FAQ ── */}
       <section id="faq" className="py-24" style={{ background: "#FFFFFF" }}>
-        <div className="container">
+        <div className="container mx-auto px-4">
           <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
             <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
               style={{ color: "#FF5E7D" }}>FAQ</motion.p>
@@ -414,7 +414,7 @@ export default function HomePage() {
           <div className="absolute top-8 left-[10%] text-5xl animate-float" style={{ animationDelay: "0s" }}>🎉</div>
           <div className="absolute bottom-8 right-[10%] text-5xl animate-float" style={{ animationDelay: "1s" }}>🏆</div>
         </div>
-        <div className="container relative z-10 text-center">
+        <div className="container mx-auto px-4 relative z-10 text-center">
           <SectionWrapper>
             <motion.h2 variants={fadeUp}
               className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
@@ -437,7 +437,7 @@ export default function HomePage() {
 
       {/* ── FOOTER ── */}
       <footer className="border-t py-10" style={{ background: "#FFFFFF", borderColor: "#E5E6F3" }}>
-        <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base"
               style={{ background: "#6C3FFE" }}>
@@ -453,13 +453,6 @@ export default function HomePage() {
               </Link>
             ))}
           </nav>
-          <p className="text-sm text-muted-foreground">
-            Made with ❤️ by{" "}
-            <a href="https://www.linkedin.com/in/lovishsinglaa/" target="_blank"
-              className="font-semibold text-primary hover:underline">
-              Lovish Singla & Shikhar Kanaujia
-            </a>
-          </p>
         </div>
       </footer>
     </div>
