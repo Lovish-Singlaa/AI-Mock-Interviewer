@@ -2,6 +2,7 @@
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, MessageSquare, Star, Sparkles, TrendingUp, Shield, Zap, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import { motion, useInView } from "framer-motion"
 import { useRef, useState } from "react"
 
@@ -39,19 +40,7 @@ function FloatingEmoji({ emoji, className, delay = 0 }) {
   )
 }
 
-function StatCounter({ value, label, color }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      className="text-center"
-    >
-      <div className={`text-4xl font-extrabold mb-1`} style={{ color }}>
-        {value}
-      </div>
-      <div className="text-sm font-medium text-muted-foreground">{label}</div>
-    </motion.div>
-  )
-}
+// Removed StatCounter
 
 function FeatureCard({ icon, emoji, title, description, color, delay }) {
   const [hovered, setHovered] = useState(false)
@@ -108,32 +97,15 @@ function TestimonialCard({ name, role, quote, initials, color, delay }) {
   )
 }
 
-function FaqItem({ question, answer, delay }) {
-  const [open, setOpen] = useState(false)
+function StepCard({ number, title, description, delay }) {
   return (
-    <motion.div
-      variants={fadeUp}
-      className="vibrant-card p-6 cursor-pointer"
-      onClick={() => setOpen(!open)}
-    >
-      <div className="flex justify-between items-center gap-4">
-        <h3 className="text-base font-bold">{question}</h3>
-        <motion.div
-          animate={{ rotate: open ? 45 : 0 }}
-          transition={{ duration: 0.2 }}
-          className="text-2xl text-primary shrink-0"
-        >
-          +
-        </motion.div>
+    <motion.div variants={fadeUp} className="vibrant-card p-8 relative overflow-hidden" style={{ animationDelay: `${delay}s` }}>
+      <div className="absolute -right-4 -top-6 text-9xl font-black opacity-[0.03] select-none text-foreground">{number}</div>
+      <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl mb-6 shadow-lg bg-primary text-white">
+        {number}
       </div>
-      <motion.div
-        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
-        initial={{ height: 0, opacity: 0 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        style={{ overflow: "hidden" }}
-      >
-        <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{answer}</p>
-      </motion.div>
+      <h3 className="text-xl font-bold mb-3">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed text-sm">{description}</p>
     </motion.div>
   )
 }
@@ -156,15 +128,14 @@ function SectionWrapper({ children, className = "" }) {
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col" style={{ background: "#F4F4FF" }}>
+    <div className="flex min-h-screen flex-col bg-background">
 
       {/* ── NAVBAR ── */}
       <motion.header
         initial={{ y: -70, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="sticky top-0 z-50 backdrop-blur-xl border-b"
-        style={{ background: "rgba(244,244,255,0.85)", borderColor: "#E5E6F3" }}
+        className="sticky top-0 z-50 backdrop-blur-xl border-b bg-background/85 border-border"
       >
         <div className="container mx-auto px-4 flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
@@ -176,8 +147,8 @@ export default function HomePage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-7">
-            {["Features", "Testimonials", "FAQ"].map(item => (
-              <Link key={item} href={`#${item.toLowerCase()}`}
+            {["Features", "How it Works", "Testimonials"].map(item => (
+              <Link key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`}
                 className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-200">
                 {item}
               </Link>
@@ -185,6 +156,7 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button variant="ghost" asChild className="font-semibold">
               <Link href="/login">Log in</Link>
             </Button>
@@ -234,7 +206,7 @@ export default function HomePage() {
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-none mb-6"
           >
             Ace Your Next{" "}
-            <span className="text-primary block sm:inline">Interview 🎤</span>
+            <span className="text-primary block sm:inline">Interview</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -268,22 +240,12 @@ export default function HomePage() {
             </Button>
           </motion.div>
 
-          {/* Stats row */}
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-3 gap-10 w-full max-w-md"
-          >
-            <StatCounter value="10K+" label="Interviews Done" color="#6C3FFE" />
-            <StatCounter value="95%" label="Success Rate" color="#FF5E7D" />
-            <StatCounter value="24/7" label="AI Available" color="#00C47A" />
-          </motion.div>
+          {/* Removed dummy metrics */}
         </div>
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="py-24" style={{ background: "#FFFFFF" }}>
+      <section id="features" className="py-24 bg-card">
         <div className="container mx-auto px-4">
           <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
             <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
@@ -299,52 +261,54 @@ export default function HomePage() {
 
           <SectionWrapper className="grid gap-7 md:grid-cols-3">
             <FeatureCard
-              emoji="🗣️"
-              icon={<MessageSquare className="h-6 w-6" />}
-              title="Realistic Simulations"
-              description="AI interviewers that adapt in real-time — just like a real panel interview with industry-specific follow-ups."
+              emoji="📄"
+              icon={<Sparkles className="h-6 w-6" />}
+              title="Resume Context"
+              description="Upload your resume to get contextual, highly targeted questions based on your actual experience."
               color="#6C3FFE"
               delay={0}
             />
             <FeatureCard
-              emoji="📊"
-              icon={<Star className="h-6 w-6" />}
-              title="Instant Smart Feedback"
-              description="Get detailed scores on clarity, confidence, and content within seconds of completing your session."
+              emoji="🎙️"
+              icon={<MessageSquare className="h-6 w-6" />}
+              title="Conversational Mode"
+              description="Talk naturally to our AI interviewer. It listens, evaluates your spoken answer, and provides feedback."
               color="#FF5E7D"
               delay={0.1}
             />
             <FeatureCard
               emoji="📈"
               icon={<TrendingUp className="h-6 w-6" />}
-              title="Progress Analytics"
-              description="Track your skill growth with visual dashboards and understand exactly where to focus next."
+              title="Actionable Feedback"
+              description="Review your score breakdown, your transcribed answer, and the ideal response."
               color="#00C47A"
               delay={0.2}
             />
           </SectionWrapper>
+        </div>
+      </section>
 
-          {/* 2-column extra features */}
-          <SectionWrapper className="grid gap-6 md:grid-cols-2 mt-8 max-w-4xl mx-auto">
-            {[
-              { emoji: "🔒", color: "#6C3FFE", title: "Privacy First", desc: "All data is end-to-end encrypted. We never share your interviews with anyone." },
-              { emoji: "⚡", color: "#FF5E7D", title: "Instant Results", desc: "No waiting. Feedback arrives live as your interview session concludes." },
-            ].map(({ emoji, color, title, desc }) => (
-              <motion.div key={title} variants={fadeUp}
-                className="vibrant-card p-6 flex items-start gap-5">
-                <div className="text-4xl shrink-0 emoji-hover">{emoji}</div>
-                <div>
-                  <h4 className="text-base font-bold mb-1">{title}</h4>
-                  <p className="text-sm text-muted-foreground">{desc}</p>
-                </div>
-              </motion.div>
-            ))}
+      {/* ── HOW IT WORKS ── */}
+      <section id="how-it-works" className="py-24 bg-background">
+        <div className="container mx-auto px-4">
+          <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
+            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
+              style={{ color: "#00C47A" }}>Simple Process</motion.p>
+            <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+              How <span className="text-primary">it works ⚙️</span>
+            </motion.h2>
+          </SectionWrapper>
+
+          <SectionWrapper className="grid gap-7 md:grid-cols-3">
+            <StepCard number="1" title="Upload Details" description="Paste your job description and optionally upload your resume to set the context." delay={0} />
+            <StepCard number="2" title="Start Interview" description="Choose your category and role, then start a mock session using voice or text." delay={0.1} />
+            <StepCard number="3" title="Review Insights" description="Get an instant rating, comprehensive feedback, and the ideal answer." delay={0.2} />
           </SectionWrapper>
         </div>
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section id="testimonials" className="py-24" style={{ background: "#F4F4FF" }}>
+      <section id="testimonials" className="py-24 bg-background">
         <div className="container mx-auto px-4">
           <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
             <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
@@ -375,37 +339,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section id="faq" className="py-24" style={{ background: "#FFFFFF" }}>
-        <div className="container mx-auto px-4">
-          <SectionWrapper className="mx-auto max-w-2xl text-center mb-16">
-            <motion.p variants={fadeUp} className="text-sm font-bold uppercase tracking-widest mb-3"
-              style={{ color: "#FF5E7D" }}>FAQ</motion.p>
-            <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-              Got questions? <span className="text-primary">We've got answers 🤔</span>
-            </motion.h2>
-          </SectionWrapper>
-
-          <SectionWrapper className="mx-auto max-w-3xl space-y-4">
-            <FaqItem
-              question="How does the AI interviewer actually work?"
-              answer="Our AI uses advanced large language models to generate realistic, role-specific questions and analyzes your audio/text responses in real time, scoring you on communication clarity, confidence signals, and technical accuracy."
-            />
-            <FaqItem
-              question="What interview types are available?"
-              answer="Technical, Behavioral, Leadership, Case Study, System Design, Coding, and General interviews — all with adjustable difficulty from Beginner to Advanced."
-            />
-            <FaqItem
-              question="Is my data private and secure?"
-              answer="Absolutely. All interview data is encrypted with AES-256. We never sell or share your personal information or interview recordings with third parties."
-            />
-            <FaqItem
-              question="Can I cancel my subscription anytime?"
-              answer="Yes — no lock-in, ever. Cancel at any time from your dashboard and keep access until the end of your billing period."
-            />
-          </SectionWrapper>
-        </div>
-      </section>
+      {/* Removed FAQ Section */}
 
       {/* ── CTA ── */}
       <section className="py-24 relative overflow-hidden">
@@ -436,7 +370,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t py-10" style={{ background: "#FFFFFF", borderColor: "#E5E6F3" }}>
+      <footer className="border-t py-10 bg-card border-border">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base"
@@ -446,10 +380,10 @@ export default function HomePage() {
             <span className="font-extrabold text-primary">InterviewAI</span>
           </Link>
           <nav className="flex gap-6">
-            {["features", "testimonials", "faq"].map(s => (
+            {["features", "how-it-works", "testimonials"].map(s => (
               <Link key={s} href={`#${s}`}
                 className="text-sm capitalize text-muted-foreground hover:text-primary transition-colors">
-                {s}
+                {s.replace('-', ' ')}
               </Link>
             ))}
           </nav>

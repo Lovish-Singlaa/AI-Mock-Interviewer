@@ -39,8 +39,7 @@ const Signup = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: "#F4F4FF" }}>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
 
       {/* Animated background blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -69,8 +68,7 @@ const Signup = () => {
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="rounded-3xl overflow-hidden shadow-2xl"
-          style={{ background: "rgba(255,255,255,0.95)", border: "1.5px solid #E5E6F3" }}
+          className="w-full max-w-md rounded-3xl shadow-2xl relative overflow-hidden bg-card border-[1.5px] border-border"
         >
           {/* Header rainbow strip */}
           <div className="h-1.5 w-full" style={{ background: "#FF5E7D" }} />

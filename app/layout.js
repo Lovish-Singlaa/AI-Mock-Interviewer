@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "./ThemeProvider";
 import Header from "./dashboard/_components/Header";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next"
@@ -21,16 +22,23 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* <Header/> */}
-        <div className="min-h-screen">
-          <Toaster/>
-          {children}
-        </div>
-        <Analytics />
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            {/* <Header/> */}
+            <div className="min-h-screen bg-background text-foreground">
+            <Toaster/>
+            {children}
+            </div>
+            <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   );
