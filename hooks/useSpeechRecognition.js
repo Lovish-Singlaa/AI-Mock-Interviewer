@@ -1,149 +1,171 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { InterviewEvent } from './useInterviewState';
 
 export function useSpeechRecognition(dispatch, voiceGenerationRef) {
-    const [sttSupported, setSttSupported] = useState(true);
+    // ElevenLabs STT is server-side, so always "supported"
+    const [sttSupported] = useState(true);
     const [transcript, setTranscript] = useState('');
-    const [interimTranscript, setInterimTranscript] = useState('');
     const [isRecording, setIsRecording] = useState(false);
+    const [isTranscribing, setIsTranscribing] = useState(false);
     const [permissionDenied, setPermissionDenied] = useState(false);
 
-    const recognitionRef = useRef(null);
-    const finalTranscriptRef = useRef(''); // Local mutable reference to prevent duplication
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+    const streamRef = useRef(null);
 
-    useEffect(() => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            setSttSupported(false);
-            return;
-        }
-
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-
-        recognition.onstart = () => {
-            setIsRecording(true);
-            setPermissionDenied(false);
-        };
-
-        recognition.onresult = (event) => {
-            let interim = '';
-            let final = '';
-
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    final += event.results[i][0].transcript;
-                } else {
-                    interim += event.results[i][0].transcript;
-                }
-            }
-
-            if (final) {
-                finalTranscriptRef.current += ' ' + final;
-                setTranscript(finalTranscriptRef.current.trim());
-            }
-            setInterimTranscript(interim.trim());
-        };
-
-        recognition.onerror = (event) => {
-            console.error("SpeechRecognition error", event.error);
-            if (event.error === 'not-allowed') {
-                setPermissionDenied(true);
-            }
-            // If it's a no-speech error, we just ignore it in continuous mode or restart.
-            // But we let the state machine handle errors if needed.
-            setIsRecording(false);
-            dispatch(InterviewEvent.STT_ERROR);
-        };
-
-        recognition.onend = () => {
-            setIsRecording(false);
-            setInterimTranscript(''); // Clear interim
-            dispatch(InterviewEvent.STT_STOPPED);
-        };
-
-        recognitionRef.current = recognition;
-
-        return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-            }
-        };
-    }, [dispatch]);
-
-    const startListening = useCallback((questionId, currentQuestionIdRef) => {
-        if (!sttSupported || !recognitionRef.current) return;
-        
+    // Start recording audio from the microphone
+    const startListening = useCallback(async (questionId, currentQuestionIdRef) => {
         // Stale generation guard
-        const expectedGeneration = voiceGenerationRef.current;
-        if (expectedGeneration !== voiceGenerationRef.current || (questionId !== null && questionId !== currentQuestionIdRef.current)) {
-            return;
-        }
+        if (voiceGenerationRef.current !== voiceGenerationRef.current) return;
 
         try {
-            recognitionRef.current.start();
-            dispatch(InterviewEvent.STT_STARTED);
-        } catch (error) {
-            console.error("Failed to start SpeechRecognition", error);
-            // Ignore if it's already started (DOMException)
-        }
-    }, [sttSupported, dispatch, voiceGenerationRef]);
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            streamRef.current = stream;
 
+            const mediaRecorder = new MediaRecorder(stream, {
+                mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus'
+                    : 'audio/webm'
+            });
+            audioChunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.start(250); // Collect chunks every 250ms
+            mediaRecorderRef.current = mediaRecorder;
+            setIsRecording(true);
+            setPermissionDenied(false);
+            dispatch(InterviewEvent.STT_STARTED);
+        } catch (err) {
+            console.error('Failed to start MediaRecorder:', err);
+            setPermissionDenied(true);
+            dispatch(InterviewEvent.STT_ERROR);
+        }
+    }, [dispatch, voiceGenerationRef]);
+
+    // Stop recording without transcribing (cleanup, mode toggle, etc.)
     const stopListening = useCallback(() => {
-        if (recognitionRef.current) {
-            recognitionRef.current.stop();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
         }
-        setInterimTranscript('');
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop());
+            streamRef.current = null;
+        }
+        mediaRecorderRef.current = null;
+        setIsRecording(false);
     }, []);
-    
+
+    // Stop recording AND transcribe the audio via ElevenLabs STT
+    // Returns a promise that resolves to the full accumulated transcript
+    const stopAndTranscribe = useCallback(async () => {
+        return new Promise((resolve) => {
+            const doTranscribe = async () => {
+                if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(t => t.stop());
+                    streamRef.current = null;
+                }
+                setIsRecording(false);
+
+                if (audioChunksRef.current.length === 0) {
+                    resolve(transcript); // Return existing transcript if no new audio
+                    return;
+                }
+
+                setIsTranscribing(true);
+
+                try {
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                    audioChunksRef.current = [];
+
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'recording.webm');
+
+                    const response = await fetch('/api/stt', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        console.error('STT API error:', response.status);
+                        setIsTranscribing(false);
+                        dispatch(InterviewEvent.STT_ERROR);
+                        resolve(transcript);
+                        return;
+                    }
+
+                    const data = await response.json();
+                    const newText = data.text || '';
+                    const accumulated = (transcript + ' ' + newText).trim();
+                    setTranscript(accumulated);
+                    setIsTranscribing(false);
+                    resolve(accumulated);
+                } catch (err) {
+                    console.error('STT transcription error:', err);
+                    setIsTranscribing(false);
+                    dispatch(InterviewEvent.STT_ERROR);
+                    resolve(transcript);
+                }
+            };
+
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+                mediaRecorderRef.current.onstop = doTranscribe;
+                mediaRecorderRef.current.stop();
+            } else {
+                doTranscribe();
+            }
+        });
+    }, [transcript, dispatch]);
+
+    // Pause/resume stubs (pause button was removed from UI, kept for compatibility)
     const pauseListening = useCallback(() => {
-        if (recognitionRef.current) {
-            recognitionRef.current.stop();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.pause();
         }
-        setInterimTranscript('');
+        setIsRecording(false);
         dispatch(InterviewEvent.PAUSE);
     }, [dispatch]);
 
     const resumeListening = useCallback((questionId, currentQuestionIdRef) => {
-        if (!sttSupported || !recognitionRef.current) return;
-        try {
-            recognitionRef.current.start();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+            mediaRecorderRef.current.resume();
+            setIsRecording(true);
             dispatch(InterviewEvent.RESUME);
-        } catch (error) {
-            console.error("Failed to resume SpeechRecognition", error);
         }
-    }, [sttSupported, dispatch]);
+    }, [dispatch]);
 
     const resetTranscript = useCallback(() => {
-        finalTranscriptRef.current = '';
         setTranscript('');
-        setInterimTranscript('');
+        audioChunksRef.current = [];
     }, []);
 
     // Explicitly ask for mic permissions
-    const requestMicPermission = async () => {
+    const requestMicPermission = useCallback(async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            // Stop the stream tracks immediately, we just needed permission
             stream.getTracks().forEach(track => track.stop());
             setPermissionDenied(false);
             return true;
         } catch (err) {
-            console.error("Mic permission denied", err);
+            console.error('Mic permission denied:', err);
             setPermissionDenied(true);
             return false;
         }
-    };
+    }, []);
 
     return {
         isRecording,
+        isTranscribing,
         transcript,
-        interimTranscript,
-        fullTranscript: (transcript + (interimTranscript ? ' ' + interimTranscript : '')).trim(),
+        interimTranscript: '', // No longer applicable with server-side STT
+        fullTranscript: transcript,
         startListening,
         stopListening,
+        stopAndTranscribe,
         pauseListening,
         resumeListening,
         resetTranscript,

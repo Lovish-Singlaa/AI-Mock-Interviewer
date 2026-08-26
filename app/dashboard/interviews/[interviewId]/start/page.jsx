@@ -52,11 +52,12 @@ export default function InterviewSession() {
     // STT
     const { 
         isRecording, 
+        isTranscribing,
         transcript, 
-        interimTranscript, 
         fullTranscript, 
         startListening, 
         stopListening, 
+        stopAndTranscribe,
         pauseListening, 
         resumeListening, 
         resetTranscript, 
@@ -77,13 +78,10 @@ export default function InterviewSession() {
                 const response = await axios.get('/api/find-interview-by-id', { params: { id: interviewId } });
                 setInterview(response.data);
                 
-                // Disable conversational mode automatically if voice is NOT supported
-                if (!window.speechSynthesis || (!window.SpeechRecognition && !window.webkitSpeechRecognition)) {
-                    setIsConversationalMode(false);
-                } else {
-                    hasStartedRef.current = true;
-                    dispatch(InterviewEvent.START_INTERVIEW);
-                }
+                // Both TTS and STT are now server-side via ElevenLabs
+                // Only mic access (getUserMedia) is needed on the client
+                hasStartedRef.current = true;
+                dispatch(InterviewEvent.START_INTERVIEW);
             } catch (error) {
                 console.error('Error fetching interview:', error);
                 toast.error("Failed to load interview");
@@ -272,25 +270,25 @@ export default function InterviewSession() {
     };
 
     const saveUserAnswer = async () => {
-        // Prevent empty submissions
-        if (fullTranscript.length < 10) {
-            toast.error('Please provide a longer answer (at least 10 characters)');
-            if (isConversationalMode) {
-                resumeListening(currentQuestionIdRef.current, currentQuestionIdRef);
-            }
-            return;
-        }
-
-        // Transition to EVALUATING (disables duplicate submits)
+        // Transition to EVALUATING immediately (disables duplicate submits, shows loading)
         dispatch(InterviewEvent.STOP_ANSWER);
-        stopListening();
         
         try {
+            // Stop recording and transcribe via ElevenLabs STT
+            const transcribedText = await stopAndTranscribe();
+            
+            // Check transcript length after transcription
+            if (!transcribedText || transcribedText.length < 10) {
+                toast.error('Your answer was too short. Please try again with a longer response.');
+                dispatch(InterviewEvent.EVALUATION_ERROR); // Back to IDLE
+                return;
+            }
+
             const response = await axios.put('/api/save-user-answer', {
                 interviewId, 
-                userResponse: fullTranscript, 
+                userResponse: transcribedText, 
                 questionIndex: activeQuestion,
-                inputMode: 'voice' // Explicitly tracking this was a voice answer
+                inputMode: 'voice'
             });
             
             if (response.data.success) {
@@ -309,11 +307,11 @@ export default function InterviewSession() {
                 }
             } else {
                 toast.error(response.data.message || "Failed to save answer");
-                dispatch(InterviewEvent.EVALUATION_ERROR); // Fallback to IDLE
+                dispatch(InterviewEvent.EVALUATION_ERROR);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || "Error saving answer");
-            dispatch(InterviewEvent.EVALUATION_ERROR); // Fallback to IDLE
+            dispatch(InterviewEvent.EVALUATION_ERROR);
         }
     };
 
@@ -633,20 +631,20 @@ export default function InterviewSession() {
 
                     {/* Transcript card */}
                     <AnimatePresence>
-                        {(state === InterviewState.LISTENING || state === InterviewState.PAUSED || fullTranscript) && (
+                        {(state === InterviewState.LISTENING || isTranscribing || fullTranscript) && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10, scale: 0.97 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.97 }}
                                 className="rounded-3xl p-5 shadow-lg"
                                 style={{ 
-                                    background: state === InterviewState.LISTENING ? BRAND.pink + '1A' : BRAND.green + '1A', 
-                                    border: `1.5px solid ${state === InterviewState.LISTENING ? BRAND.pink + '40' : BRAND.green + '40'}` 
+                                    background: state === InterviewState.LISTENING ? BRAND.pink + '1A' : isTranscribing ? BRAND.cyan + '1A' : BRAND.green + '1A', 
+                                    border: `1.5px solid ${state === InterviewState.LISTENING ? BRAND.pink + '40' : isTranscribing ? BRAND.cyan + '40' : BRAND.green + '40'}` 
                                 }}
                             >
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2 text-sm font-bold"
-                                        style={{ color: state === InterviewState.LISTENING ? BRAND.pink : BRAND.green }}>
+                                        style={{ color: state === InterviewState.LISTENING ? BRAND.pink : isTranscribing ? BRAND.cyan : BRAND.green }}>
                                         {state === InterviewState.LISTENING ? (
                                             <>
                                                 <motion.span
@@ -655,24 +653,29 @@ export default function InterviewSession() {
                                                     className="w-2 h-2 rounded-full"
                                                     style={{ background: BRAND.pink, display: 'inline-block' }}
                                                 />
-                                                Listening...
+                                                Recording...
                                             </>
-                                        ) : state === InterviewState.PAUSED ? (
-                                            <><PauseIcon className="h-4 w-4" /> Paused</>
+                                        ) : isTranscribing ? (
+                                            <><LoaderCircle className="h-4 w-4 animate-spin" /> Transcribing...</>
                                         ) : <><CheckCircle className="h-4 w-4" /> Your Response</>}
                                     </div>
-                                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                                        style={{
-                                            background: state === InterviewState.LISTENING ? BRAND.pink + '33' : BRAND.green + '33',
-                                            color: state === InterviewState.LISTENING ? BRAND.pink : BRAND.green
-                                        }}>
-                                        {fullTranscript.length} chars
-                                    </span>
+                                    {fullTranscript && (
+                                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                            style={{
+                                                background: BRAND.green + '33',
+                                                color: BRAND.green
+                                            }}>
+                                            {fullTranscript.length} chars
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="text-sm leading-relaxed text-gray-700 min-h-[60px] max-h-[200px] overflow-y-auto">
-                                    {fullTranscript || "Start speaking…"}
-                                    {state === InterviewState.LISTENING && interimTranscript && (
-                                        <span className="text-gray-400 italic"> {interimTranscript}</span>
+                                <div className="text-sm leading-relaxed text-foreground min-h-[60px] max-h-[200px] overflow-y-auto">
+                                    {state === InterviewState.LISTENING && !fullTranscript ? (
+                                        <span className="text-muted-foreground italic">Speak your answer — it will be transcribed when you stop.</span>
+                                    ) : isTranscribing ? (
+                                        <span className="text-muted-foreground italic">Processing your audio...</span>
+                                    ) : (
+                                        fullTranscript || <span className="text-muted-foreground italic">Start speaking…</span>
                                     )}
                                 </div>
                             </motion.div>
@@ -692,7 +695,7 @@ export default function InterviewSession() {
                                 className="flex-1 h-14 rounded-2xl font-extrabold text-white text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-md"
                                 style={{ background: state === InterviewState.LISTENING ? BRAND.pink : BRAND.violet }}
                             >
-                                <MicIcon className="h-5 w-5" /> {state === InterviewState.LISTENING ? "Recording..." : fullTranscript ? "Record More" : "Start Recording"}
+                                <MicIcon className="h-5 w-5" /> {state === InterviewState.LISTENING ? "Recording..." : "Start Recording"}
                             </motion.button>
 
                             {/* Stop & Save Button */}
@@ -700,7 +703,7 @@ export default function InterviewSession() {
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.97 }}
                                 onClick={saveUserAnswer}
-                                disabled={state === InterviewState.EVALUATING || state === InterviewState.TRANSITIONING || state === InterviewState.COMPLETED || fullTranscript.length === 0}
+                                disabled={state === InterviewState.EVALUATING || state === InterviewState.TRANSITIONING || state === InterviewState.COMPLETED || (!isRecording && fullTranscript.length === 0)}
                                 className="flex-1 h-14 rounded-2xl font-extrabold text-white text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-md"
                                 style={{
                                     background: state === InterviewState.EVALUATING ? '#9CA3AF' : (state === InterviewState.LISTENING || state === InterviewState.PAUSED) ? BRAND.pink : BRAND.green
